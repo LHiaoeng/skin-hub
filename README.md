@@ -2,6 +2,8 @@
 
 Skin Hub 是一个面向搜索引擎友好的 LOL 皮肤展示与检索网站。页面组织参考 `https://www.skinexplorer.lol/`：首页聚合最新皮肤、英雄、皮肤宇宙、皮肤系列入口；核心内容使用稳定、可索引的详情页承载，而不是只依赖客户端筛选。
 
+前端项目：`D:\WebstormProjects\skin-hub`
+
 后端接口项目：`D:\IdeaProjects\light-shadow-wallpaper-admin`
 
 ## 目标
@@ -20,12 +22,18 @@ Skin Hub 是一个面向搜索引擎友好的 LOL 皮肤展示与检索网站。
 
 - `Next.js` 原生支持 SSR、SSG、ISR、动态 sitemap、metadata、Open Graph，适合 SEO 内容站。
 - React 生态便于构建复杂筛选、图片瀑布流、详情交互。
-- 可通过 `Route Handler` 做轻量 BFF，隔离后端管理接口、统一缓存和错误处理。
+- 页面组件直接在服务端调用后端公开接口，数据请求与渲染合一，结构简单。
 
 建议依赖：
 
 - 框架：`next`、`react`、`typescript`
-- 样式：`tailwindcss` 或 CSS Modules，优先保持可控的自定义视觉
+- 样式：
+  - **主方案：`tailwindcss` + CSS Modules 混用**
+    - Tailwind 负责布局、间距、响应式、通用工具类
+    - CSS Modules 负责皮肤卡片、详情页等需要精细动画和复杂选择器的组件
+  - **组件层：`shadcn/ui`**（基于 Radix UI + Tailwind，完全 Server Component 友好）
+  - **主题切换：`next-themes`**（支持明暗模式切换，默认暗色主题）
+  - **配置：Tailwind `darkMode: 'class'` 策略**
 - 数据请求：原生 `fetch` + 服务端缓存；客户端交互用 `nuqs` 管理 URL 查询参数
 - 图标：`lucide-react`
 - SEO：Next Metadata API、动态 `sitemap.ts`、`robots.ts`
@@ -40,7 +48,7 @@ Browser / Search Bot
 Next.js Frontend (SSR / SSG / ISR)
         |
         |-- App pages: 可索引页面、详情页、筛选页
-        |-- API routes: BFF、缓存、接口聚合、图片代理
+        |-- 服务端组件直接调用后端公开接口
         |
         v
 light-shadow-wallpaper-admin
@@ -49,7 +57,6 @@ light-shadow-wallpaper-admin
         |-- /rest/wallpaper/*           壁纸与皮肤图片资源
         |-- /rest/lol/prestige-chromas  臻彩藏品
         |-- /rest/news/*                公告与热点
-        |-- /lol/*                      后台管理接口，需要鉴权
         |
         v
 MySQL / Redis / OSS / CommunityDragon / Tencent LOL data
@@ -90,8 +97,6 @@ skin-hub/
       news/
         page.tsx
       api/
-        search/
-          route.ts
         image-proxy/
           route.ts
     components/
@@ -207,21 +212,43 @@ GET /lol/skinline/page
 GET /lol/universe/page
 ```
 
-建议后端补充只读公开接口：
+建议后端在 `openapi` 控制器下补充以下只读公开接口，无需鉴权注解，仅供前台只读消费：
 
 ```text
 GET /rest/lol/skins
+    皮肤分页列表
+    参数：page、size、championId、skinlineId、rarity、legacy、pbe、q（关键字）
+
 GET /rest/lol/skins/{riotSkinId}
+    皮肤详情（含炫彩 JSON、所属系列 ID 集合）
+
 GET /rest/lol/champions
-GET /rest/lol/champions/{championId}
+    英雄列表（id、heroId、name、nameEng、title、roles、squarePortraitPath）
+
+GET /rest/lol/champions/{heroId}
+    英雄详情，附带该英雄全部皮肤列表
+
 GET /rest/lol/skinlines
+    皮肤系列列表（id、riotSkinlineId、name、engName、description）
+
 GET /rest/lol/skinlines/{riotSkinlineId}
+    系列详情，附带关联皮肤列表与关联宇宙信息
+
 GET /rest/lol/universes
+    宇宙列表（id、lolUniverseId、name、engName、imagePath）
+
 GET /rest/lol/universes/{lolUniverseId}
+    宇宙详情，附带关联系列列表与皮肤列表
+
 GET /rest/lol/search?q=
+    全局搜索，匹配皮肤名、英雄名、系列名，返回分类结果
 ```
 
-如果短期不改后端，可以由 Next.js BFF 使用服务端凭据调用后台接口，再输出前台只读数据。该方案要注意不要把后台 token 暴露给浏览器。
+实现说明：
+
+- 以上接口复用现有 `/lol/skin/page`、`/lol/champion/page`、`/lol/skinline/page`、`/lol/universe/page` 的 Service 层逻辑，只需新建 `openapi` 包下的 Controller 暴露为公开接口。
+- 返回字段只输出前台展示所需字段，后台管理字段（操作人、更新时间等）不暴露。
+- 建议统一返回格式与现有公开接口保持一致。
 
 ## 前端数据模型
 
@@ -284,7 +311,7 @@ export interface Universe {
 - `app/*`：路由、metadata、页面级数据获取。
 - `features/*`：业务模块容器，例如皮肤检索、英雄详情、神话商店。
 - `components/*`：可复用 UI，例如皮肤卡片、英雄头像、筛选条、图片预览。
-- `lib/api/*`：后端请求、BFF 请求、错误处理、缓存策略。
+- `lib/api/*`：后端请求封装、错误处理、缓存策略。
 - `lib/seo/*`：metadata、JSON-LD、sitemap 数据生成。
 - `types/*`：接口 DTO 和前端归一化模型。
 
@@ -316,34 +343,77 @@ export interface Universe {
 
 ## 视觉与体验方向
 
-- 第一屏直接给可用检索与内容，不做纯营销落地页。
-- 皮肤卡片以原画或 loading 图为主视觉，保留英雄、稀有度、系列、状态徽章。
-- 详情页突出大图、基础信息、炫彩、所属系列、同英雄其他皮肤。
-- 移动端优先保证筛选可用：筛选抽屉、排序菜单、紧凑卡片网格。
+- **默认暗色主题**：皮肤原画在暗背景下视觉效果更佳，降低视觉噪音，突出图片色彩
+- **明暗模式切换**：通过 `next-themes` 实现，支持手动切换和系统偏好跟随，避免主题闪烁（FOUC）
+- **样式 SEO 优化**：
+  - CSS 输出体积极小（Tailwind purge 后 5-15KB），可内联到 `<head>` 提升 FCP
+  - 使用 `aspect-ratio` 锁定图片比例，避免布局抖动（CLS 友好）
+  - 用 `next/font` 优化字体加载，避免 FOUT
+- 第一屏直接给可用检索与内容，不做纯营销落地页
+- 皮肤卡片以原画或 loading 图为主视觉，保留英雄、稀有度、系列、状态徽章
+- 详情页突出大图、基础信息、炫彩、所属系列、同英雄其他皮肤
+- 移动端优先保证筛选可用：筛选抽屉、排序菜单、紧凑卡片网格
 
 ## 环境变量
 
 ```env
 NEXT_PUBLIC_SITE_URL=https://skin-hub.example.com
 BACKEND_BASE_URL=http://127.0.0.1:9527
-BACKEND_INTERNAL_TOKEN=
 IMAGE_PROXY_ALLOW_HOSTS=game.gtimg.cn,raw.communitydragon.org,oss.breadj.com
 ```
 
 ## 部署建议
 
-- 前端：Vercel、Node Server、Docker 均可；如果部署在国内服务器，建议 Node Server + Nginx。
+- 前端：Node Server 或 Docker；国内服务器建议 Node Server + Nginx。
 - 后端：继续使用 `light-shadow-wallpaper-admin`，保证 MySQL、Redis、OSS、定时同步任务可用。
 - Nginx：
   - `/` 转发到 Next.js。
-  - `/api/*` 保留给 Next.js BFF。
-  - `/backend/*` 可选转发到后端，仅服务端或内网使用。
-- 图片域名配置到 `next.config.ts` 的 `images.remotePatterns`。
+  - 图片域名配置到 `next.config.ts` 的 `images.remotePatterns`。
+
+## CI/CD
+
+使用 **TeamCity** 作为 CI/CD 平台。
+
+### 构建流水线（前端）
+
+```text
+触发条件：main 分支 push 或 Pull Request
+
+1. Install        pnpm install --frozen-lockfile
+2. Lint           pnpm lint
+3. Type Check     pnpm tsc --noEmit
+4. Test           pnpm vitest --run
+5. Build          pnpm build
+6. E2E (可选)     pnpm playwright test
+7. Deploy         将 .next/ 产物部署到目标服务器
+```
+
+### 构建流水线（后端）
+
+```text
+触发条件：后端仓库 main 分支 push
+
+1. Build          mvn clean package -DskipTests
+2. Test           mvn test
+3. Deploy         将 jar 包部署到目标服务器，重启服务
+```
+
+### 环境变量管理
+
+- 敏感变量存入 TeamCity **Parameters** 或 **Vault**，构建时注入，不提交到代码仓库。
+- 各环境（staging / production）使用独立的 Build Configuration 或 Deployment Target，区分 `.env` 注入。
+
+### 推荐配置要点
+
+- 前端构建使用 `pnpm`，在 TeamCity Agent 上安装 Node.js 和 pnpm，或使用 Docker Agent 镜像。
+- 开启 **Build Cache**：缓存 `node_modules` 和 `.next/cache`，加速增量构建。
+- PR 构建只跑 Lint + Type Check + Test，不做部署，保持反馈速度。
+- main 分支合并后触发完整构建 + 自动部署到 staging，生产部署需要手动确认（TeamCity Deployment Approval）。
 
 ## 开发阶段
 
 1. 初始化 Next.js 项目骨架、样式系统、基础布局、后端 client。
-2. 补齐或代理公开只读接口：皮肤、英雄、系列、宇宙列表与详情。
+2. 后端补充只读公开接口：皮肤、英雄、系列、宇宙列表与详情。
 3. 实现首页、皮肤检索页、皮肤详情页。
 4. 实现英雄、系列、宇宙列表与详情页，打通内部链接。
 5. 实现神话商店、臻彩藏品、壁纸、公告页。
@@ -352,7 +422,7 @@ IMAGE_PROXY_ALLOW_HOSTS=game.gtimg.cn,raw.communitydragon.org,oss.breadj.com
 
 ## 关键风险
 
-- 目前核心数据接口 `/lol/skin/page`、`/lol/champion/page`、`/lol/skinline/page`、`/lol/universe/page` 是后台权限接口，前台正式站需要公开只读接口或 BFF 代理。
+- 目前核心数据接口 `/lol/skin/page`、`/lol/champion/page`、`/lol/skinline/page`、`/lol/universe/page` 是后台权限接口，前台正式上线前必须完成后端只读公开接口的补充。
 - 后端文档存在编码显示问题，后续应统一为 UTF-8，避免中文字段说明和接口文档不可读。
 - 图片来源跨多个域名，必须提前处理远程图片白名单、防盗链、缓存和失败占位图。
 - 皮肤、系列、宇宙之间存在逗号分隔 ID 集合，前端应在服务端归一化，避免页面组件内反复解析。

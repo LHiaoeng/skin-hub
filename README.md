@@ -9,6 +9,7 @@ Skin Hub 是一个面向搜索引擎友好的 LOL 皮肤展示与检索网站。
 ## 目标
 
 - SEO 优先：核心列表页、详情页、聚合页使用服务端渲染或静态生成，保证 HTML 首屏包含主体内容。
+- PC 优先，兼容移动端：以桌面端为主要设计基准，同时保证移动端可正常访问和使用核心功能。
 - 检索体验清晰：支持按英雄、皮肤名、系列、宇宙、稀有度、是否限定、PBE、发布时间等条件筛选。
 - 页面结构稳定：每个英雄、皮肤、系列、宇宙都有独立 URL，便于收录、分享和内部链接。
 - 图片体验稳定：皮肤原画、加载图、头像、炫彩图等走统一图片组件和 CDN/代理策略。
@@ -92,10 +93,6 @@ skin-hub/
         page.tsx
       prestige-chromas/
         page.tsx
-      wallpapers/
-        page.tsx
-      news/
-        page.tsx
       api/
         image-proxy/
           route.ts
@@ -151,8 +148,6 @@ skin-hub/
 | 皮肤宇宙详情 | `/universes/[universeId]` | SSG/ISR | 聚合多个系列与皮肤 |
 | 神话商店 | `/mythic-shop` | SSR/ISR | 展示当前轮换、历史出现次数 |
 | 臻彩藏品 | `/prestige-chromas` | ISR | 展示臻彩列表与更新列表 |
-| 壁纸 | `/wallpapers` | SSR | 按英雄、皮肤、分辨率检索壁纸 |
-| LOL 公告 | `/news` | SSR/ISR | 聚合 LOL 公告与热点 |
 
 URL 建议使用稳定 ID + 可读 slug：
 
@@ -203,16 +198,7 @@ GET /rest/news/getHupuLolNews
 
 ### 后台管理接口
 
-以下接口当前带权限校验，不能直接给前台公开调用：
-
-```text
-GET /lol/skin/page
-GET /lol/champion/page
-GET /lol/skinline/page
-GET /lol/universe/page
-```
-
-建议后端在 `openapi` 控制器下补充以下只读公开接口，无需鉴权注解，仅供前台只读消费：
+以下接口当前带权限校验，需在后端 `openapi` 控制器下补充对应的只读公开版本：
 
 ```text
 GET /rest/lol/skins
@@ -246,9 +232,9 @@ GET /rest/lol/search?q=
 
 实现说明：
 
-- 以上接口复用现有 `/lol/skin/page`、`/lol/champion/page`、`/lol/skinline/page`、`/lol/universe/page` 的 Service 层逻辑，只需新建 `openapi` 包下的 Controller 暴露为公开接口。
+- 以上接口复用现有 `/lol/skin/page`、`/lol/champion/page`、`/lol/skinline/page`、`/lol/universe/page` 的 Service 层逻辑，只需在 `openapi` 包下新建 Controller 暴露为公开接口，改动最小。
 - 返回字段只输出前台展示所需字段，后台管理字段（操作人、更新时间等）不暴露。
-- 建议统一返回格式与现有公开接口保持一致。
+- 返回格式与现有公开接口保持一致。
 
 ## 前端数据模型
 
@@ -320,7 +306,6 @@ export interface Universe {
 - 首页：`revalidate = 3600`。
 - 皮肤、英雄、系列、宇宙详情：`revalidate = 86400`，数据同步后可按需 revalidate。
 - 神话商店：根据后端返回的商品结束时间或最小结束时间设置较短缓存。
-- 新闻：`revalidate = 120`，匹配后端 Redis 两分钟缓存。
 - 图片：优先直接使用 CDN/OSS 地址；跨域或防盗链资源走 `/api/image-proxy`。
 
 ## 搜索与筛选
@@ -352,7 +337,16 @@ export interface Universe {
 - 第一屏直接给可用检索与内容，不做纯营销落地页
 - 皮肤卡片以原画或 loading 图为主视觉，保留英雄、稀有度、系列、状态徽章
 - 详情页突出大图、基础信息、炫彩、所属系列、同英雄其他皮肤
-- 移动端优先保证筛选可用：筛选抽屉、排序菜单、紧凑卡片网格
+
+### 移动端适配
+
+- **布局**：桌面端 3-4 列卡片网格，移动端降级为单列或双列紧凑布局
+- **筛选**：移动端筛选收入底部抽屉（Drawer），避免占用主内容区域
+- **图片**：使用 `next/image` 的 `sizes` 属性按断点输出合适分辨率，移动端不加载大图
+- **触控**：可点击区域不小于 44×44px，符合触控规范
+- **viewport**：`<meta name="viewport" content="width=device-width, initial-scale=1">` 确保正确缩放
+- **字体大小**：正文不小于 14px，避免 iOS 自动缩放
+- **导航**：移动端顶部导航收为汉堡菜单，保持核心入口可达
 
 ## 环境变量
 
@@ -374,30 +368,6 @@ IMAGE_PROXY_ALLOW_HOSTS=game.gtimg.cn,raw.communitydragon.org,oss.breadj.com
 
 使用 **TeamCity** 作为 CI/CD 平台。
 
-### 构建流水线（前端）
-
-```text
-触发条件：main 分支 push 或 Pull Request
-
-1. Install        pnpm install --frozen-lockfile
-2. Lint           pnpm lint
-3. Type Check     pnpm tsc --noEmit
-4. Test           pnpm vitest --run
-5. Build          pnpm build
-6. E2E (可选)     pnpm playwright test
-7. Deploy         将 .next/ 产物部署到目标服务器
-```
-
-### 构建流水线（后端）
-
-```text
-触发条件：后端仓库 main 分支 push
-
-1. Build          mvn clean package -DskipTests
-2. Test           mvn test
-3. Deploy         将 jar 包部署到目标服务器，重启服务
-```
-
 ### 环境变量管理
 
 - 敏感变量存入 TeamCity **Parameters** 或 **Vault**，构建时注入，不提交到代码仓库。
@@ -416,7 +386,7 @@ IMAGE_PROXY_ALLOW_HOSTS=game.gtimg.cn,raw.communitydragon.org,oss.breadj.com
 2. 后端补充只读公开接口：皮肤、英雄、系列、宇宙列表与详情。
 3. 实现首页、皮肤检索页、皮肤详情页。
 4. 实现英雄、系列、宇宙列表与详情页，打通内部链接。
-5. 实现神话商店、臻彩藏品、壁纸、公告页。
+5. 实现神话商店、臻彩藏品页。
 6. 补充 sitemap、robots、JSON-LD、Open Graph、canonical。
 7. 用 Playwright 检查桌面和移动端首屏、筛选、详情页图片渲染。
 

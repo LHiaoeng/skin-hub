@@ -15,6 +15,7 @@ interface SkinQueryParams {
   isPbeOnly?: number;
   keyword?: string;
   riotSkinId?: number;
+  championId?: number;
 }
 
 interface DictData {
@@ -152,6 +153,7 @@ export async function getSkins(params: SkinQueryParams = {}): Promise<Skin[]> {
     isPbeOnly: params.isPbeOnly,
     keyword: params.keyword,
     riotSkinId: params.riotSkinId,
+    championId: params.championId,
   });
 
   const result = await requestFirst<Skin[] | PageResult<Skin>>(
@@ -194,6 +196,18 @@ export async function getChampions(): Promise<Champion[]> {
   );
 
   return unwrapList(result);
+}
+
+export async function getChampion(heroId: number): Promise<Champion | undefined> {
+  const champions = await getChampions();
+  return champions.find((champion) => champion.heroId === heroId);
+}
+
+export async function getChampionSkins(championId: number): Promise<Skin[]> {
+  return getSkins({
+    championId,
+    size: 500,
+  });
 }
 
 export async function getSkinlines(): Promise<Skinline[]> {

@@ -2,29 +2,29 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { normalizeImageUrl } from "@/lib/images/cdn";
+import { championPath } from "@/lib/routing/slug";
 import type { Champion, SkinDictItem, Skinline, Universe } from "@/types/lol";
 
 import styles from "./home-tabs.module.css";
 
-type TabKey = "champions" | "universes" | "skinlines" | "coming";
+export type HomeTabKey = "champions" | "universes" | "skinlines" | "coming";
 
-const tabs: Array<{ key: TabKey; label: string }> = [
-  { key: "champions", label: "英雄" },
-  { key: "universes", label: "皮肤宇宙" },
-  { key: "skinlines", label: "皮肤套装" },
-  { key: "coming", label: "后续内容" },
+const tabs: Array<{ key: HomeTabKey; label: string; href: string }> = [
+  { key: "champions", label: "英雄", href: "/champions" },
+  { key: "universes", label: "皮肤宇宙", href: "/universes" },
+  { key: "skinlines", label: "皮肤套装", href: "/skinlines" },
+  { key: "coming", label: "后续内容", href: "/coming" },
 ];
 
-export function getHomeTabKey(value: string | string[] | null | undefined): TabKey {
-  const tabValue = Array.isArray(value) ? value[0] : value;
-  return tabs.some((tab) => tab.key === tabValue) ? (tabValue as TabKey) : "champions";
-}
-
-function getTabHref(tab: TabKey) {
-  return tab === "champions" ? "/" : `/?tab=${tab}`;
-}
-
-function getChampionFilterHref({ role, position }: { role?: string; position?: string }) {
+function getChampionFilterHref({
+  basePath,
+  role,
+  position,
+}: {
+  basePath: string;
+  role?: string;
+  position?: string;
+}) {
   const searchParams = new URLSearchParams();
 
   if (role) {
@@ -36,7 +36,7 @@ function getChampionFilterHref({ role, position }: { role?: string; position?: s
   }
 
   const queryString = searchParams.toString();
-  return queryString ? `/?${queryString}` : "/";
+  return queryString ? `${basePath}?${queryString}` : basePath;
 }
 
 function getDictValue(item: SkinDictItem) {
@@ -52,10 +52,12 @@ function hasChampionRole(champion: Champion, role?: string) {
     return true;
   }
 
-  return champion.roles
-    ?.split(",")
-    .map((item) => item.trim().toLowerCase())
-    .includes(role.toLowerCase()) ?? false;
+  return (
+    champion.roles
+      ?.split(",")
+      .map((item) => item.trim().toLowerCase())
+      .includes(role.toLowerCase()) ?? false
+  );
 }
 
 function hasChampionPosition(champion: Champion, position?: string) {
@@ -75,6 +77,7 @@ export function HomeTabs({
   selectedRole,
   selectedPosition,
   activeTab = "champions",
+  championBasePath = "/champions",
 }: {
   champions: Champion[];
   universes: Universe[];
@@ -83,7 +86,8 @@ export function HomeTabs({
   championPositions: SkinDictItem[];
   selectedRole?: string;
   selectedPosition?: string;
-  activeTab?: TabKey;
+  activeTab?: HomeTabKey;
+  championBasePath?: "/" | "/champions";
 }) {
   const filteredChampions = champions.filter(
     (champion) => hasChampionRole(champion, selectedRole) && hasChampionPosition(champion, selectedPosition),
@@ -95,7 +99,7 @@ export function HomeTabs({
         {tabs.map((tab) => (
           <Link
             className={activeTab === tab.key ? `${styles.tab} ${styles.tabActive}` : styles.tab}
-            href={getTabHref(tab.key)}
+            href={tab.href}
             key={tab.key}
             role="tab"
             aria-selected={activeTab === tab.key}
@@ -112,7 +116,7 @@ export function HomeTabs({
               <span>位置</span>
               <Link
                 className={!selectedPosition ? `${styles.filter} ${styles.filterActive}` : styles.filter}
-                href={getChampionFilterHref({ role: selectedRole })}
+                href={getChampionFilterHref({ basePath: championBasePath, role: selectedRole })}
               >
                 全部
               </Link>
@@ -121,7 +125,7 @@ export function HomeTabs({
                 return value ? (
                   <Link
                     className={selectedPosition === value ? `${styles.filter} ${styles.filterActive}` : styles.filter}
-                    href={getChampionFilterHref({ role: selectedRole, position: value })}
+                    href={getChampionFilterHref({ basePath: championBasePath, role: selectedRole, position: value })}
                     key={value}
                   >
                     {getDictName(item)}
@@ -134,7 +138,7 @@ export function HomeTabs({
               <span>定位</span>
               <Link
                 className={!selectedRole ? `${styles.filter} ${styles.filterActive}` : styles.filter}
-                href={getChampionFilterHref({ position: selectedPosition })}
+                href={getChampionFilterHref({ basePath: championBasePath, position: selectedPosition })}
               >
                 全部
               </Link>
@@ -143,7 +147,7 @@ export function HomeTabs({
                 return value ? (
                   <Link
                     className={selectedRole === value ? `${styles.filter} ${styles.filterActive}` : styles.filter}
-                    href={getChampionFilterHref({ role: value, position: selectedPosition })}
+                    href={getChampionFilterHref({ basePath: championBasePath, role: value, position: selectedPosition })}
                     key={value}
                   >
                     {getDictName(item)}
@@ -162,13 +166,15 @@ export function HomeTabs({
                 {filteredChampions.map((champion) => {
                   const imageUrl = normalizeImageUrl(champion.squarePortraitPath);
                   return (
-                    <article className={`${styles.card} ${styles.compactCard}`} key={champion.heroId}>
-                      {imageUrl ? <Image src={imageUrl} alt={`${champion.name} 国服头像`} width={52} height={52} /> : null}
-                      <div>
-                        <h3>{champion.title ?? champion.name}</h3>
-                        <p>{champion.name ?? champion.nameEng ?? "英雄资料"}</p>
-                      </div>
-                    </article>
+                    <Link className={`${styles.card} ${styles.compactCard}`} href={championPath(champion)} key={champion.heroId}>
+                      <span className={styles.championAvatar}>
+                        {imageUrl ? <Image src={imageUrl} alt={`${champion.name} 国服头像`} fill sizes="42px" /> : null}
+                      </span>
+                      <span className={styles.championText}>
+                        <strong>{champion.title ?? champion.name}</strong>
+                        <span>{champion.name ?? champion.nameEng ?? "英雄资料"}</span>
+                      </span>
+                    </Link>
                   );
                 })}
               </div>

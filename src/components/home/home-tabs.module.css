@@ -102,6 +102,8 @@
   min-height: 96px;
   overflow: hidden;
   padding: 10px;
+  color: inherit;
+  text-decoration: none;
   border: 1px solid hsl(var(--border));
   border-radius: 12px;
   background: hsl(var(--card));
@@ -109,16 +111,46 @@
 
 .compactCard {
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
+  grid-template-columns: 42px minmax(0, 1fr);
   min-height: 58px;
   gap: 8px;
   align-items: center;
 }
 
-.compactCard img {
-  width: 38px;
-  height: 38px;
+.championAvatar {
+  position: relative;
+  display: block;
+  width: 42px;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
   border-radius: 9px;
+  background: hsl(var(--muted));
+}
+
+.championAvatar img {
+  object-fit: cover;
+}
+
+.championText {
+  display: grid;
+  min-width: 0;
+}
+
+.championText strong,
+.championText span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.championText strong {
+  font-size: 0.94rem;
+}
+
+.championText span {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.78rem;
 }
 
 .imageCard {

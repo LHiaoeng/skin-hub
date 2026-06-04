@@ -54,6 +54,9 @@ export interface Champion {
   name: string;
   nameEng?: string;
   title?: string;
+  titleEng?: string;
+  alias?: string;
+  description?: string;
   roles?: string;
   positions?: string[];
   squarePortraitPath?: string;

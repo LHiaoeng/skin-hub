@@ -2,7 +2,7 @@ import { HomeContent } from "@/components/home/home-content";
 
 export const revalidate = 3600;
 
-export default async function HomePage({
+export default async function ChampionsPage({
   searchParams,
 }: {
   searchParams?: Promise<{
@@ -15,7 +15,7 @@ export default async function HomePage({
   return (
     <HomeContent
       activeTab="champions"
-      championBasePath="/"
+      championBasePath="/champions"
       selectedPosition={getFirstSearchParam(resolvedSearchParams?.position)}
       selectedRole={getFirstSearchParam(resolvedSearchParams?.role)}
     />

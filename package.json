@@ -1,0 +1,43 @@
+{
+  "name": "skin-hub",
+  "version": "1.0.0",
+  "description": "Skin Hub 是一个面向搜索引擎友好的 LOL 皮肤展示与检索网站。页面组织参考 `https://www.skinexplorer.lol/`：首页聚合最新皮肤、英雄、皮肤宇宙、皮肤系列入口；核心内容使用稳定、可索引的详情页承载，而不是只依赖客户端筛选。",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LHiaoeng/skin-hub.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LHiaoeng/skin-hub/issues"
+  },
+  "homepage": "https://github.com/LHiaoeng/skin-hub#readme",
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.17.0",
+    "next": "^16.2.7",
+    "next-themes": "^0.4.6",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.0",
+    "@types/node": "^25.9.1",
+    "@types/react": "^19.2.16",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.7",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,379 @@
+﻿@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+}
+
+@layer base {
+  :root {
+    --background: 210 36% 96%;
+    --foreground: 213 33% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 213 33% 13%;
+    --primary: 194 100% 28%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 210 24% 91%;
+    --secondary-foreground: 213 33% 13%;
+    --muted: 210 24% 91%;
+    --muted-foreground: 211 16% 43%;
+    --accent: 210 24% 91%;
+    --accent-foreground: 213 33% 13%;
+    --accent-strong: 39 74% 36%;
+    --border: 213 22% 83%;
+    --input: 213 22% 83%;
+    --ring: 194 100% 28%;
+  }
+
+  .dark {
+    --background: 210 48% 5%;
+    --foreground: 203 42% 96%;
+    --card: 213 35% 10%;
+    --card-foreground: 203 42% 96%;
+    --primary: 192 83% 62%;
+    --primary-foreground: 213 35% 10%;
+    --secondary: 214 28% 16%;
+    --secondary-foreground: 203 42% 96%;
+    --muted: 214 28% 16%;
+    --muted-foreground: 211 22% 66%;
+    --accent: 214 28% 16%;
+    --accent-foreground: 203 42% 96%;
+    --accent-strong: 42 63% 64%;
+    --border: 212 25% 22%;
+    --input: 212 25% 22%;
+    --ring: 192 83% 62%;
+  }
+
+  * {
+    box-sizing: border-box;
+    border-color: hsl(var(--border));
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-height: 100vh;
+    margin: 0;
+    color: hsl(var(--foreground));
+    background:
+      radial-gradient(circle at 18% 0%, hsl(var(--primary) / 0.18), transparent 34rem),
+      radial-gradient(circle at 86% 8%, hsl(var(--accent-strong) / 0.14), transparent 28rem),
+      hsl(var(--background));
+  }
+
+  body::before {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    content: "";
+    background-image: linear-gradient(hsl(var(--foreground) / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--foreground) / 0.035) 1px, transparent 1px);
+    background-size: 36px 36px;
+    mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.85), transparent 75%);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button,
+  input {
+    font: inherit;
+  }
+}
+
+/* Detail/list pages still use these shared classes until their own modules are split out. */
+.section,
+.detail,
+.settings-panel {
+  width: min(1180px, calc(100% - 28px));
+  margin: 18px auto 0;
+  padding: 20px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 24px;
+  background: hsl(var(--card) / 0.82);
+  box-shadow: 0 18px 60px hsl(220 45% 2% / 0.2);
+}
+
+.section__heading {
+  margin-bottom: 16px;
+}
+
+.section__heading h1,
+.section__heading h2,
+.info-card h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.5vw, 2rem);
+  letter-spacing: -0.04em;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: hsl(var(--accent-strong));
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.search-box {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  max-width: 620px;
+  margin: 0 0 18px;
+  padding: 8px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 18px;
+  background: hsl(var(--card));
+}
+
+.search-box input {
+  min-width: 0;
+  padding: 12px 14px;
+  color: hsl(var(--foreground));
+  border: 0;
+  outline: 0;
+  background: transparent;
+}
+
+.search-box button {
+  min-height: 42px;
+  padding: 0 18px;
+  color: hsl(var(--primary-foreground));
+  font-weight: 800;
+  border: 0;
+  border-radius: 12px;
+  background: hsl(var(--primary));
+}
+
+.result-count {
+  margin: 0 0 18px;
+  color: hsl(var(--muted-foreground));
+}
+
+.empty-state {
+  padding: 14px;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.88rem;
+  border: 1px dashed hsl(var(--border));
+  border-radius: 12px;
+  background: hsl(var(--muted) / 0.28);
+}
+
+.skin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.skin-card {
+  display: grid;
+  min-height: 100%;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  border-radius: 22px;
+  background: hsl(var(--card));
+  transition: transform 160ms ease, border-color 160ms ease;
+}
+
+.skin-card:hover {
+  transform: translateY(-3px);
+  border-color: hsl(var(--primary) / 0.62);
+}
+
+.skin-card__image,
+.detail-hero__image,
+.preview-image {
+  position: relative;
+  overflow: hidden;
+  background: hsl(var(--muted));
+}
+
+.skin-card__image {
+  aspect-ratio: 16 / 9;
+}
+
+.skin-card__image img,
+.detail-hero__image img,
+.preview-image img {
+  object-fit: cover;
+}
+
+.skin-card__body {
+  display: grid;
+  gap: 9px;
+  padding: 16px;
+}
+
+.skin-card h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.skin-card p,
+.info-card p,
+.detail-hero__copy p,
+.section__heading p {
+  margin: 0;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.75;
+}
+
+.meta-row,
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.meta-row span,
+.tag-row span {
+  padding: 6px 10px;
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: 999px;
+  background: hsl(var(--secondary) / 0.56);
+  font-size: 0.82rem;
+}
+
+.breadcrumb {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+  color: hsl(var(--muted-foreground));
+}
+
+.detail-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  gap: 22px;
+  align-items: end;
+}
+
+.detail-hero h1 {
+  max-width: 880px;
+  margin: 0;
+  font-size: clamp(2.2rem, 5vw, 5rem);
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+}
+
+.detail-hero__copy {
+  display: grid;
+  gap: 16px;
+  padding-bottom: 14px;
+}
+
+.detail-hero__image {
+  min-height: clamp(340px, 54vw, 720px);
+  border: 1px solid hsl(var(--border));
+  border-radius: 24px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 320px;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.info-card {
+  padding: 20px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 20px;
+  background: hsl(var(--card));
+}
+
+.info-card h2 {
+  margin-bottom: 16px;
+  font-size: 1.25rem;
+}
+
+dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+dt {
+  color: hsl(var(--muted-foreground));
+}
+
+dd {
+  margin: 0;
+  text-align: right;
+}
+
+.preview-image {
+  aspect-ratio: 308 / 560;
+  border-radius: 18px;
+}
+
+.image-placeholder {
+  display: grid;
+  min-height: 180px;
+  place-items: center;
+  color: hsl(var(--muted-foreground));
+}
+
+@media (max-width: 1024px) {
+  .detail-hero,
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .skin-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .preview-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .section,
+  .detail,
+  .settings-panel {
+    width: min(100% - 20px, 1180px);
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .skin-grid,
+  .search-box {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-hero__image {
+    min-height: 300px;
+  }
+}

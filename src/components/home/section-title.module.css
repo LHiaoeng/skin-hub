@@ -1,0 +1,10 @@
+﻿.root {
+  margin-bottom: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.2vw, 1.9rem);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}

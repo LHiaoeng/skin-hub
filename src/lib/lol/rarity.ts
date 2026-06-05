@@ -201,7 +201,7 @@ export function getEmblemDisplayItems(
       value,
       name: getDictItemName(item, value),
       iconPath,
-      iconUrl: normalizeImageUrl(iconPath, isPbeOnly),
+      iconUrl: normalizeImageUrl(iconPath, isPbeOnly, "zh_cn"),
     };
   });
 }

@@ -199,6 +199,11 @@ export async function getChampions(): Promise<Champion[]> {
 }
 
 export async function getChampion(heroId: number): Promise<Champion | undefined> {
+  const detail = await requestFirst<Champion>([`/rest/lol/champions/${heroId}`], 86400);
+  if (detail) {
+    return detail;
+  }
+
   const champions = await getChampions();
   return champions.find((champion) => champion.heroId === heroId);
 }
@@ -206,7 +211,7 @@ export async function getChampion(heroId: number): Promise<Champion | undefined>
 export async function getChampionSkins(championId: number): Promise<Skin[]> {
   return getSkins({
     championId,
-    size: 500,
+    size: 100,
   });
 }
 

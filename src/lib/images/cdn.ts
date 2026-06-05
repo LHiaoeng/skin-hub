@@ -1,5 +1,6 @@
 const COMMUNITY_DRAGON_DOMAIN = "https://communitydragon.breadj.com/";
 type CommunityDragonVersion = "latest" | "pbe";
+type CommunityDragonLang = "default" | "zh_cn";
 
 function joinUrl(domain: string, path: string) {
   return `${domain.replace(/\/+$/, "")}/${path.replace(/^\/+/, "")}`;
@@ -13,8 +14,16 @@ function resolveVersion(isPbeOnly?: number | boolean): CommunityDragonVersion {
   return isPbeOnly === true || isPbeOnly === 1 ? "pbe" : "latest";
 }
 
-function withCommunityDragonVersion(path: string, version: CommunityDragonVersion) {
-  const resourcePath = path.replace(/^\/+/, "");
+function withCommunityDragonLang(path: string, lang: CommunityDragonLang) {
+  if (lang === "zh_cn" && path.includes("/v1/emblem-images/")) {
+    return path.replace("/global/default/", "/global/zh_cn/");
+  }
+
+  return path;
+}
+
+function withCommunityDragonVersion(path: string, version: CommunityDragonVersion, lang: CommunityDragonLang) {
+  const resourcePath = withCommunityDragonLang(path.replace(/^\/+/, ""), lang);
   if (resourcePath.startsWith("pbe/") || resourcePath.startsWith("latest/")) {
     return resourcePath;
   }
@@ -22,7 +31,7 @@ function withCommunityDragonVersion(path: string, version: CommunityDragonVersio
   return `${version}/${resourcePath}`;
 }
 
-export function resolveResourceUrl(url: string | undefined, isPbeOnly?: number | boolean): string {
+export function resolveResourceUrl(url: string | undefined, isPbeOnly?: number | boolean, lang: CommunityDragonLang = "default"): string {
   const rawUrl = url?.trim();
   if (!rawUrl) {
     return "";
@@ -37,9 +46,9 @@ export function resolveResourceUrl(url: string | undefined, isPbeOnly?: number |
   }
 
   const resourcePath = rawUrl.replace(/\\/g, "/").replace(/^\/+/, "");
-  return joinUrl(COMMUNITY_DRAGON_DOMAIN, withCommunityDragonVersion(resourcePath, resolveVersion(isPbeOnly)));
+  return joinUrl(COMMUNITY_DRAGON_DOMAIN, withCommunityDragonVersion(resourcePath, resolveVersion(isPbeOnly), lang));
 }
 
-export function normalizeImageUrl(path: string | undefined, isPbeOnly?: number | boolean): string | undefined {
-  return resolveResourceUrl(path, isPbeOnly) || undefined;
+export function normalizeImageUrl(path: string | undefined, isPbeOnly?: number | boolean, lang: CommunityDragonLang = "default"): string | undefined {
+  return resolveResourceUrl(path, isPbeOnly, lang) || undefined;
 }

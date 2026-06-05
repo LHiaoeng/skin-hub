@@ -2,11 +2,17 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowDown, ArrowUp } from "lucide-react";
 
+import { RarityBadge } from "@/components/home/rarity-badge";
+import { JsonLd } from "@/components/seo/json-ld";
+import { SkinEmblems } from "@/components/skin/skin-emblems";
 import { CopyButton } from "@/components/ui/copy-button";
-import { getChampion, getChampionSkins, getChampions } from "@/lib/api/backend-client";
+import { getChampion, getChampionSkins, getChampions, getLolDictionaries } from "@/lib/api/backend-client";
 import { normalizeImageUrl } from "@/lib/images/cdn";
 import { championPath, parseRouteId, skinPath } from "@/lib/routing/slug";
+import { breadcrumbSchema } from "@/lib/seo/schema";
+import type { Champion, Skin, SkinDictItem } from "@/types/lol";
 
 import styles from "./page.module.css";
 
@@ -16,8 +22,16 @@ interface ChampionDetailPageProps {
   }>;
   searchParams?: Promise<{
     sort?: string | string[];
+    order?: string | string[];
   }>;
 }
+
+type SortField = "release" | "rarity";
+type SortOrder = "asc" | "desc";
+type SkinSort = {
+  field: SortField;
+  order: SortOrder;
+};
 
 export const revalidate = 86400;
 
@@ -38,11 +52,21 @@ export async function generateMetadata({ params }: ChampionDetailPageProps): Pro
     };
   }
 
+  const skins = await getChampionSkins(champion.heroId);
+  const baseSkin = findBaseSkin(skins);
+  const imageUrl = normalizeImageUrl(baseSkin?.splashPath ?? champion.squarePortraitPath, baseSkin?.isPbeOnly);
+  const description = champion.description ?? `${champion.name} 的国服英雄资料、英雄称号、背景描述和皮肤列表。`;
+
   return {
     title: `${champion.title ?? champion.name} - ${champion.name} 英雄资料`,
-    description: `${champion.name} 的国服英雄资料、定位、位置和皮肤列表。`,
+    description,
     alternates: {
       canonical: championPath(champion),
+    },
+    openGraph: {
+      title: `${champion.name} 英雄资料`,
+      description,
+      images: imageUrl ? [{ url: imageUrl, alt: `${champion.name} 英雄皮肤背景图` }] : undefined,
     },
   };
 }
@@ -50,118 +74,267 @@ export async function generateMetadata({ params }: ChampionDetailPageProps): Pro
 export default async function ChampionDetailPage({ params, searchParams }: ChampionDetailPageProps) {
   const { championId } = await params;
   const resolvedSearchParams = await searchParams;
-  const sort = getSortValue(resolvedSearchParams?.sort);
+  const sort = getSortValue(resolvedSearchParams);
   const heroId = parseRouteId(championId);
-  const [champion, skins] = await Promise.all([getChampion(heroId), getChampionSkins(heroId)]);
+  const [champion, skins, dictionaries] = await Promise.all([getChampion(heroId), getChampionSkins(heroId), getLolDictionaries()]);
 
   if (!champion) {
     notFound();
   }
 
-  const portraitUrl = normalizeImageUrl(champion.squarePortraitPath);
-  const sortedSkins = [...skins].sort((left, right) =>
-    sort === "asc" ? left.riotSkinId - right.riotSkinId : right.riotSkinId - left.riotSkinId,
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const pageUrl = `${siteUrl}${championPath(champion)}`;
+  const baseSkin = findBaseSkin(skins);
+  const backgroundUrl = normalizeImageUrl(
+    baseSkin?.splashPath ?? champion.squarePortraitPath,
+    baseSkin?.isPbeOnly,
   );
+  const sortedSkins = sortSkins(skins, sort);
+  const zhTitle = champion.title ?? "称号未提供";
+  const enName = champion.nameEng ?? "English name unavailable";
+  const enTitle = champion.titleEng ?? "English title unavailable";
+  const description = champion.description ?? "后端暂未提供该英雄的中文背景描述。";
+  const fullChineseName = `${zhTitle} ${champion.name}`;
+  const fullEnglishName = `${enTitle} ${enName}`;
+  const roleLabels = splitCsv(champion.roles).map((role) => getDictText(dictionaries.championRoles, role));
+  const positionLabels = champion.positions?.map((position) => getDictText(dictionaries.championPositions, position)) ?? [];
 
   return (
     <main className={styles.shell}>
-      <nav className={styles.breadcrumb} aria-label="面包屑">
-        <Link href="/">首页</Link>
-        <span>/</span>
-        <Link href="/champions">英雄</Link>
-        <span>/</span>
-        <span>{champion.name}</span>
-      </nav>
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "首页", url: siteUrl },
+          { name: "英雄", url: `${siteUrl}/champions` },
+          { name: fullChineseName, url: pageUrl },
+        ])}
+      />
+      <JsonLd data={championSchema(champion, pageUrl, backgroundUrl)} />
 
-      <section className={styles.hero}>
-        <div className={styles.portrait}>
-          {portraitUrl ? <Image src={portraitUrl} alt={`${champion.name} 国服头像`} fill priority sizes="112px" /> : null}
-        </div>
-        <div>
-          <h1>{champion.title ?? champion.name}</h1>
-          <p className={styles.english}>
-            {champion.name} {champion.nameEng ? ` / ${champion.nameEng}` : null}
-            {champion.titleEng ? ` · ${champion.titleEng}` : null}
-          </p>
-          {champion.description ? <p className={styles.description}>{champion.description}</p> : null}
-          <div className={styles.heroMeta}>
-            {champion.roles?.split(",").filter(Boolean).map((role) => (
-              <span className={styles.tag} key={role}>
-                {role}
-              </span>
-            ))}
-            {champion.positions?.map((position) => (
-              <span className={styles.tag} key={position}>
-                {position}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
+      {backgroundUrl ? (
+        <Image
+          className={styles.background}
+          src={backgroundUrl}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          aria-hidden="true"
+        />
+      ) : null}
+      <div className={styles.scrim} />
 
-      <section className={styles.grid}>
-        <div className={styles.card}>
-          <h2>基本信息</h2>
-          <div className={styles.copyGrid}>
-            <CopyRow label="英雄 ID" value={champion.heroId} />
-            <CopyRow label="中文名" value={champion.name} />
-            <CopyRow label="称号" value={champion.title} />
-            <CopyRow label="英文名" value={champion.nameEng} />
-            <CopyRow label="英文称号" value={champion.titleEng} />
-            <CopyRow label="别名" value={champion.alias} />
-          </div>
-        </div>
+      <article className={styles.content}>
+        <nav className={styles.breadcrumb} aria-label="面包屑">
+          <Link href="/">首页</Link>
+          <span>/</span>
+          <Link href="/champions">英雄</Link>
+          <span>/</span>
+          <span className={styles.copyText}>
+            {fullChineseName}
+            <CopyButton value={fullChineseName} />
+          </span>
+        </nav>
 
-        <div className={styles.card}>
-          <div className={styles.skinHeader}>
-            <h2>皮肤列表</h2>
-            <div className={styles.sortLinks} aria-label="皮肤排序">
-              <Link className={sort === "desc" ? styles.active : undefined} href={`${championPath(champion)}?sort=desc`}>
-                ID 降序
-              </Link>
-              <Link className={sort === "asc" ? styles.active : undefined} href={`${championPath(champion)}?sort=asc`}>
-                ID 升序
-              </Link>
+        <section className={styles.hero}>
+          <div className={styles.heroCopy}>
+            <div className={styles.titleGroup}>
+              <h1>
+                <span>{fullChineseName}</span>
+              </h1>
+            </div>
+            <div className={styles.englishGroup}>
+              <p>
+                <span>{fullEnglishName}</span>
+                <CopyButton value={fullEnglishName} />
+              </p>
+            </div>
+            <div className={styles.description}>
+              <p>
+                {description}
+                <CopyButton value={description} />
+              </p>
+            </div>
+            <div className={styles.heroMeta}>
+              {roleLabels.map((role) => (
+                <span className={styles.tag} key={role}>
+                  {role}
+                </span>
+              ))}
+              {positionLabels.map((position) => (
+                <span className={styles.tag} key={position}>
+                  {position}
+                </span>
+              ))}
             </div>
           </div>
+        </section>
 
-          {sortedSkins.length > 0 ? (
-            <div className={styles.skinList}>
-              {sortedSkins.map((skin) => {
-                const imageUrl = normalizeImageUrl(skin.tilePath ?? skin.loadScreenPath ?? skin.splashPath, skin.isPbeOnly);
-                return (
-                  <Link className={styles.skinItem} href={skinPath(skin)} key={skin.riotSkinId}>
-                    <span className={styles.skinThumb}>
-                      {imageUrl ? <Image src={imageUrl} alt={`${skin.name} 小头像`} fill sizes="56px" /> : null}
-                    </span>
-                    <span>
-                      <strong>{skin.name}</strong>
-                      <span>{skin.riotSkinId}</span>
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div className={styles.empty}>公开接口暂未返回该英雄皮肤数据。</div>
-          )}
+        <div className={styles.divider} />
+
+        <div className={styles.toolbar}>
+          <div className={styles.sortLinks} aria-label="皮肤排序">
+            <SortLink champion={champion} field="release" activeSort={sort}>
+              发布时间
+            </SortLink>
+            <SortLink champion={champion} field="rarity" activeSort={sort}>
+              皮肤品质
+            </SortLink>
+          </div>
+          <span>{sortedSkins.length} 款皮肤</span>
         </div>
-      </section>
+
+        {sortedSkins.length > 0 ? (
+          <section className={styles.skinList} aria-label={`${champion.name} 皮肤列表`}>
+            {sortedSkins.map((skin, index) => (
+              <SkinTile
+                skin={skin}
+                key={skin.riotSkinId}
+                priority={index < 4}
+                emblemDictItems={dictionaries.emblems}
+                rarityDictItems={dictionaries.cnRarity}
+              />
+            ))}
+          </section>
+        ) : (
+          <section className={styles.empty}>公开接口暂未返回该英雄皮肤数据。</section>
+        )}
+      </article>
     </main>
   );
 }
 
-function CopyRow({ label, value }: { label: string; value: string | number | undefined }) {
+function SkinTile({
+  skin,
+  priority,
+  emblemDictItems,
+  rarityDictItems,
+}: {
+  skin: Skin;
+  priority: boolean;
+  emblemDictItems: SkinDictItem[];
+  rarityDictItems: SkinDictItem[];
+}) {
+  const imageUrl = normalizeImageUrl(skin.tilePath ?? skin.loadScreenPath ?? skin.splashPath, skin.isPbeOnly);
+
   return (
-    <div className={styles.copyItem}>
-      <span>{label}</span>
-      <code>{value ?? "未提供"}</code>
-      <CopyButton value={value} />
-    </div>
+    <Link className={styles.skinItem} href={skinPath(skin)} title={skin.name}>
+      <span className={styles.skinThumb}>
+        {imageUrl ? (
+          <Image src={imageUrl} alt={`${skin.name} 皮肤卡片图`} fill priority={priority} sizes="(max-width: 720px) 46vw, 280px" />
+        ) : (
+          <span className={styles.imagePlaceholder}>No image</span>
+        )}
+        <SkinEmblems
+          className={styles.emblems}
+          dictItems={emblemDictItems}
+          emblemNames={skin.emblemNames}
+          isPbeOnly={skin.isPbeOnly}
+        />
+      </span>
+      <span className={styles.skinName}>
+        <RarityBadge
+          regionRarityId={skin.regionRarityId}
+          rarityGemPath={skin.rarityGemPath}
+          isPbeOnly={skin.isPbeOnly}
+          dictItems={rarityDictItems}
+        />
+        <strong title={skin.name}>{skin.name}</strong>
+      </span>
+    </Link>
   );
 }
 
-function getSortValue(value: string | string[] | undefined) {
-  const sort = Array.isArray(value) ? value[0] : value;
-  return sort === "asc" ? "asc" : "desc";
+function SortLink({
+  champion,
+  field,
+  activeSort,
+  children,
+}: {
+  champion: Champion;
+  field: SortField;
+  activeSort: SkinSort;
+  children: React.ReactNode;
+}) {
+  const nextOrder = activeSort.field === field && activeSort.order === "asc" ? "desc" : "asc";
+  const href =
+    field === "release" && nextOrder === "asc"
+      ? championPath(champion)
+      : `${championPath(champion)}?sort=${field}&order=${nextOrder}`;
+
+  return (
+    <Link className={field === activeSort.field ? styles.active : undefined} href={href}>
+      {children}
+      {field === activeSort.field ? <SortIcon order={activeSort.order} /> : null}
+    </Link>
+  );
+}
+
+function SortIcon({ order }: { order: SortOrder }) {
+  return order === "asc" ? <ArrowUp aria-hidden="true" /> : <ArrowDown aria-hidden="true" />;
+}
+
+function getSortValue(searchParams: { sort?: string | string[]; order?: string | string[] } | undefined): SkinSort {
+  const field = getFirstParam(searchParams?.sort) === "rarity" ? "rarity" : "release";
+  const order = getFirstParam(searchParams?.order) === "desc" ? "desc" : "asc";
+
+  return { field, order };
+}
+
+function sortSkins(skins: Skin[], sort: SkinSort) {
+  return [...skins].sort((left, right) => {
+    const direction = sort.order === "asc" ? 1 : -1;
+
+    if (sort.field === "rarity") {
+      return (getRarityValue(left) - getRarityValue(right) || left.riotSkinId - right.riotSkinId) * direction;
+    }
+
+    const leftTime = Date.parse(left.releaseTime ?? "") || left.riotSkinId;
+    const rightTime = Date.parse(right.releaseTime ?? "") || right.riotSkinId;
+    return (leftTime - rightTime || left.riotSkinId - right.riotSkinId) * direction;
+  });
+}
+
+function findBaseSkin(skins: Skin[]) {
+  return skins.find((skin) => skin.isBase === 1) ?? skins.find((skin) => skin.name === skin.championName) ?? skins[0];
+}
+
+function splitCsv(value: string | undefined) {
+  return value?.split(",").map((item) => item.trim()).filter(Boolean) ?? [];
+}
+
+function getFirstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function getRarityValue(skin: Skin) {
+  const numericRarity = Number(skin.rarity);
+  if (Number.isFinite(numericRarity)) {
+    return numericRarity;
+  }
+
+  return Number(skin.regionRarityId ?? 0);
+}
+
+function getDictText(items: SkinDictItem[], value: string) {
+  const item = items.find((dictItem) => String(dictItem.value).toLowerCase() === value.toLowerCase());
+  return item?.name?.trim() || item?.label?.trim() || value;
+}
+
+function championSchema(champion: Champion, pageUrl: string, imageUrl: string | undefined) {
+  const fullChineseName = `${champion.title ?? "称号未提供"} ${champion.name}`;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    name: `${fullChineseName} 英雄资料`,
+    url: pageUrl,
+    primaryImageOfPage: imageUrl,
+    description: champion.description ?? `${champion.name} 的 LOL 英雄资料和皮肤列表。`,
+    about: {
+      "@type": "Person",
+      name: fullChineseName,
+      alternateName: [champion.nameEng, champion.alias].filter(Boolean),
+      description: champion.description,
+    },
+  };
 }

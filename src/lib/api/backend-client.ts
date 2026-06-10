@@ -122,8 +122,8 @@ export async function getHomeData(): Promise<HomeData> {
   return {
     latestSkins,
     featuredChampions: champions,
-    skinlines: skinlines.slice(0, 24),
-    universes: universes.slice(0, 24),
+    skinlines,
+    universes,
     dictionaries,
   };
 }

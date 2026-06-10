@@ -22,8 +22,19 @@ function withCommunityDragonLang(path: string, lang: CommunityDragonLang) {
   return path;
 }
 
+function normalizeCommunityDragonPath(path: string) {
+  const resourcePath = path.replace(/^\/+/, "");
+
+  if (!resourcePath.toLowerCase().startsWith("lol-game-data/assets/")) {
+    return resourcePath;
+  }
+
+  const assetPath = resourcePath.slice("lol-game-data/assets/".length).replace(/^ASSETS\//, "assets/");
+  return `plugins/rcp-be-lol-game-data/global/default/${assetPath}`;
+}
+
 function withCommunityDragonVersion(path: string, version: CommunityDragonVersion, lang: CommunityDragonLang) {
-  const resourcePath = withCommunityDragonLang(path.replace(/^\/+/, ""), lang);
+  const resourcePath = withCommunityDragonLang(normalizeCommunityDragonPath(path), lang);
   if (resourcePath.startsWith("pbe/") || resourcePath.startsWith("latest/")) {
     return resourcePath;
   }

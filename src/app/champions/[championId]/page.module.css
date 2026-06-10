@@ -120,46 +120,44 @@
   font-weight: 700;
 }
 
-.breadcrumb button,
-.englishGroup button,
-.description button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.2em;
-  height: 1.2em;
-  margin-left: 4px;
-  padding: 0;
+.actionButton {
   color: var(--champion-muted);
-  vertical-align: -0.15em;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
+  border-radius: 0;
+  background: transparent !important;
   cursor: pointer;
-  opacity: 0.68;
-  transition: color 150ms ease, opacity 150ms ease, background 150ms ease;
+  opacity: 0.36;
+  transition: color 150ms ease, opacity 150ms ease, background 150ms ease, filter 150ms ease;
 }
 
-.breadcrumb button:hover,
-.englishGroup button:hover,
-.description button:hover {
+:global(html[data-pointer-active="true"]) .actionButton {
+  opacity: 0.66;
+}
+
+.actionButton:hover,
+.actionButton:focus-visible {
   color: var(--champion-text);
-  background: rgb(91 208 255 / 0.12);
+  background: rgb(91 208 255 / 0.12) !important;
   opacity: 1;
 }
 
-.breadcrumb svg,
-.englishGroup svg,
-.description svg {
+.copyText .actionButton,
+.englishGroup .actionButton,
+.description .actionButton {
+  width: 1.2em;
+  height: 1.2em;
+  margin-left: 2px;
+  padding: 0;
+  vertical-align: -0.15em;
+}
+
+.actionButton svg {
   width: 1em;
   height: 1em;
 }
 
-.breadcrumb button[aria-label="复制成功"],
-.englishGroup button[aria-label="复制成功"],
-.description button[aria-label="复制成功"] {
+.actionButton[aria-label="复制成功"] {
   color: var(--champion-text);
-  background: rgb(91 208 255 / 0.18);
+  background: rgb(91 208 255 / 0.18) !important;
   opacity: 1;
 }
 
@@ -219,34 +217,23 @@
 .sortLinks {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 2px;
 }
 
-.sortLinks a {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 34px;
-  padding: 0 12px;
-  color: var(--champion-muted);
-  font-size: 0.82rem;
+.sortButton {
+  gap: 5px;
+  padding: 0 6px;
   font-weight: 850;
   text-decoration: none;
-  border: 1px solid var(--champion-border);
-  border-radius: 8px;
-  background: var(--champion-panel);
-  backdrop-filter: blur(12px);
 }
 
-.sortLinks svg {
+.sortButton svg {
   width: 15px;
   height: 15px;
 }
 
-.sortLinks .active {
+.sortButton.active {
   color: var(--champion-text);
-  border-color: var(--champion-accent);
-  background: rgb(91 208 255 / 0.16);
 }
 
 .skinList {
@@ -414,16 +401,11 @@
     font-size: 0.9rem;
   }
 
-  .titleGroup button,
-  .breadcrumb button,
-  .englishGroup button,
-  .description button {
+  .copyText .actionButton,
+  .englishGroup .actionButton,
+  .description .actionButton {
     width: 1.45em;
     height: 1.45em;
-  }
-
-  .sortLinks a {
-    min-height: 44px;
   }
 
   .skinList {

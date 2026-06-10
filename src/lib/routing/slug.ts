@@ -22,6 +22,14 @@ export function championPath(champion: { heroId: number; nameEng?: string; name:
   return `/champions/${champion.heroId}-${toSlug(champion.nameEng ?? champion.name)}`;
 }
 
+export function skinlinePath(skinline: { riotSkinlineId: number; engName?: string; name: string }): string {
+  return `/skinlines/${skinline.riotSkinlineId}-${toSlug(skinline.engName ?? skinline.name)}`;
+}
+
+export function universePath(universe: { lolUniverseId: number; engName?: string; name: string }): string {
+  return `/universes/${universe.lolUniverseId}-${toSlug(universe.engName ?? universe.name)}`;
+}
+
 export function parseRouteId(value: string): number {
   const [id] = value.split("-");
   return Number(id);

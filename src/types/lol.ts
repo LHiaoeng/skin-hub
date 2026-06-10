@@ -35,17 +35,45 @@ export interface Skin {
   rarity?: string;
   regionRarityId?: number;
   isLegacy?: number;
+  isLegacyGlobal?: number;
   isPbeOnly?: number;
+  skinType?: string;
   releaseTime?: string;
   splashPath?: string;
   uncenteredSplashPath?: string;
   tilePath?: string;
+  chromaPath?: string;
   loadScreenPath?: string;
+  loadScreenVintagePath?: string;
   rarityGemPath?: string;
   chromasJson?: string;
+  chromas?: SkinChroma[];
   skinlineIdSets?: string;
   skinlineNames?: string[];
+  skinlines?: Skinline[];
+  universes?: Universe[];
   emblemNames?: string;
+  splashVideoPath?: string;
+  collectionSplashVideoPath?: string;
+  collectionCardHoverVideoPath?: string;
+  skinAugments?: unknown;
+}
+
+export interface SkinChroma {
+  id: number;
+  name: string;
+  contentId?: string;
+  chromaPath?: string;
+  tilePath?: string;
+  splashPath?: string;
+  uncenteredSplashPath?: string;
+  loadScreenPath?: string;
+  loadScreenVintagePath?: string;
+  splashVideoPath?: string;
+  previewVideoUrl?: string;
+  collectionSplashVideoPath?: string;
+  colors?: string[];
+  description?: string;
 }
 
 export interface Champion {

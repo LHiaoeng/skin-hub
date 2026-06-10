@@ -7,6 +7,8 @@ import { ArrowDown, ArrowUp } from "lucide-react";
 import { RarityBadge } from "@/components/home/rarity-badge";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SkinEmblems } from "@/components/skin/skin-emblems";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { CopyButton } from "@/components/ui/copy-button";
 import { getChampion, getChampionSkins, getChampions, getLolDictionaries } from "@/lib/api/backend-client";
 import { normalizeImageUrl } from "@/lib/images/cdn";
@@ -15,6 +17,7 @@ import { breadcrumbSchema } from "@/lib/seo/schema";
 import type { Champion, Skin, SkinDictItem } from "@/types/lol";
 
 import styles from "./page.module.css";
+import { PointerActivity } from "./pointer-activity";
 
 interface ChampionDetailPageProps {
   params: Promise<{
@@ -101,6 +104,7 @@ export default async function ChampionDetailPage({ params, searchParams }: Champ
 
   return (
     <main className={styles.shell}>
+      <PointerActivity />
       <JsonLd
         data={breadcrumbSchema([
           { name: "首页", url: siteUrl },
@@ -131,7 +135,7 @@ export default async function ChampionDetailPage({ params, searchParams }: Champ
           <span>/</span>
           <span className={styles.copyText}>
             {fullChineseName}
-            <CopyButton value={fullChineseName} />
+            <CopyButton className={styles.actionButton} value={fullChineseName} />
           </span>
         </nav>
 
@@ -145,13 +149,13 @@ export default async function ChampionDetailPage({ params, searchParams }: Champ
             <div className={styles.englishGroup}>
               <p>
                 <span>{fullEnglishName}</span>
-                <CopyButton value={fullEnglishName} />
+                <CopyButton className={styles.actionButton} value={fullEnglishName} />
               </p>
             </div>
             <div className={styles.description}>
               <p>
                 {description}
-                <CopyButton value={description} />
+                <CopyButton className={styles.actionButton} value={description} />
               </p>
             </div>
             <div className={styles.heroMeta}>
@@ -172,14 +176,14 @@ export default async function ChampionDetailPage({ params, searchParams }: Champ
         <div className={styles.divider} />
 
         <div className={styles.toolbar}>
-          <div className={styles.sortLinks} aria-label="皮肤排序">
+          <ButtonGroup className={styles.sortLinks} aria-label="皮肤排序">
             <SortLink champion={champion} field="release" activeSort={sort}>
               发布时间
             </SortLink>
             <SortLink champion={champion} field="rarity" activeSort={sort}>
               皮肤品质
             </SortLink>
-          </div>
+          </ButtonGroup>
           <span>{sortedSkins.length} 款皮肤</span>
         </div>
 
@@ -262,10 +266,19 @@ function SortLink({
       : `${championPath(champion)}?sort=${field}&order=${nextOrder}`;
 
   return (
-    <Link className={field === activeSort.field ? styles.active : undefined} href={href}>
-      {children}
-      {field === activeSort.field ? <SortIcon order={activeSort.order} /> : null}
-    </Link>
+    <Button
+      asChild
+      className={[styles.actionButton, styles.sortButton, field === activeSort.field ? styles.active : ""]
+        .filter(Boolean)
+        .join(" ")}
+      variant="ghost"
+      size="xs"
+    >
+      <Link href={href}>
+        {children}
+        {field === activeSort.field ? <SortIcon order={activeSort.order} /> : null}
+      </Link>
+    </Button>
   );
 }
 

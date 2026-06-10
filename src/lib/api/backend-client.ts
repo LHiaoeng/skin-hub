@@ -16,6 +16,7 @@ interface SkinQueryParams {
   keyword?: string;
   riotSkinId?: number;
   championId?: number;
+  revalidate?: number;
 }
 
 interface DictData {
@@ -127,11 +128,11 @@ export async function getHomeData(): Promise<HomeData> {
   };
 }
 
-export async function getLolDictionaries(): Promise<LolDictionaries> {
+export async function getLolDictionaries(revalidate = 3600): Promise<LolDictionaries> {
   const searchParams = new URLSearchParams();
   LOL_DICT_CODES.forEach((dictCode) => searchParams.append("dictCodes", dictCode));
 
-  const dictList = await request<DictData[]>(`/rest/dict/data?${searchParams.toString()}`, 3600);
+  const dictList = await request<DictData[]>(`/rest/dict/data?${searchParams.toString()}`, revalidate);
 
   return {
     cnRarity: findDictItems(dictList, "lol_skin_rarity_cn"),
@@ -158,7 +159,7 @@ export async function getSkins(params: SkinQueryParams = {}): Promise<Skin[]> {
 
   const result = await requestFirst<Skin[] | PageResult<Skin>>(
     [`/rest/lol/skins?${searchParams}`, `/lol/skin/page?${searchParams}`],
-    3600,
+    params.revalidate ?? 3600,
   );
 
   return unwrapList(result);
@@ -208,10 +209,11 @@ export async function getChampion(heroId: number): Promise<Champion | undefined>
   return champions.find((champion) => champion.heroId === heroId);
 }
 
-export async function getChampionSkins(championId: number): Promise<Skin[]> {
+export async function getChampionSkins(championId: number, revalidate = 3600): Promise<Skin[]> {
   return getSkins({
     championId,
     size: 100,
+    revalidate,
   });
 }
 

@@ -122,7 +122,6 @@
 
 .actionButton {
   color: var(--champion-muted);
-  border-radius: 0;
   background: transparent !important;
   cursor: pointer;
   opacity: 0.36;
@@ -215,14 +214,11 @@
 }
 
 .sortLinks {
-  display: flex;
   flex-wrap: wrap;
-  gap: 2px;
 }
 
 .sortButton {
   gap: 5px;
-  padding: 0 6px;
   font-weight: 850;
   text-decoration: none;
 }

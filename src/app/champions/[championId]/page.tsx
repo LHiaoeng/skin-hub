@@ -259,7 +259,7 @@ function SortLink({
   activeSort: SkinSort;
   children: React.ReactNode;
 }) {
-  const nextOrder = activeSort.field === field && activeSort.order === "asc" ? "desc" : "asc";
+  const nextOrder = getNextSortOrder(field, activeSort);
   const href =
     field === "release" && nextOrder === "asc"
       ? championPath(champion)
@@ -271,8 +271,7 @@ function SortLink({
       className={[styles.actionButton, styles.sortButton, field === activeSort.field ? styles.active : ""]
         .filter(Boolean)
         .join(" ")}
-      variant="ghost"
-      size="xs"
+      variant="outline"
     >
       <Link href={href}>
         {children}
@@ -280,6 +279,14 @@ function SortLink({
       </Link>
     </Button>
   );
+}
+
+function getNextSortOrder(field: SortField, activeSort: SkinSort): SortOrder {
+  if (activeSort.field === field) {
+    return activeSort.order === "asc" ? "desc" : "asc";
+  }
+
+  return field === "rarity" ? "desc" : "asc";
 }
 
 function SortIcon({ order }: { order: SortOrder }) {

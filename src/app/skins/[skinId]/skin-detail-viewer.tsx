@@ -7,6 +7,7 @@ import {
   Download,
   ExternalLink,
   Film,
+  Image as ImageIcon,
   Info,
   Maximize2,
   Mic,
@@ -20,6 +21,8 @@ import { useEffect, useRef, useState } from "react";
 
 import styles from "@/app/skins/[skinId]/skin-detail-viewer.module.css";
 import { ChromaColorSwatch, normalizeChromaColors } from "@/components/skin/chroma-color-swatch";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { Carousel, type CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { CopyButton } from "@/components/ui/copy-button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -103,31 +106,28 @@ export function SkinDetailViewer({
   const [selectedVisualId, setSelectedVisualId] = useState(visuals[0]?.id ?? "base");
   const [fitMode, setFitMode] = useState<"contain" | "cover">("contain");
   const [viewMode, setViewMode] = useState<"focus" | "original">("focus");
-  const [mediaMode, setMediaMode] = useState<"image" | "video">("image");
+  const [mediaMode, setMediaMode] = useState<"image" | "video">(() => (getVisualVideoUrl(visuals[0], "focus") ? "video" : "image"));
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [areControlsActive, setAreControlsActive] = useState(true);
+  const controlsIdleTimerRef = useRef<number | undefined>(undefined);
 
   const baseVisual = visuals[0];
   const selectedVisual = visuals.find((visual) => visual.id === selectedVisualId) ?? visuals[0];
   const visualUrl = viewMode === "focus"
     ? selectedVisual?.focusImageUrl ?? selectedVisual?.imageUrl
     : selectedVisual?.imageUrl ?? selectedVisual?.focusImageUrl;
-  const videoUrl = viewMode === "focus"
-    ? selectedVisual?.focusVideoUrl ?? selectedVisual?.videoUrl
-    : selectedVisual?.videoUrl ?? selectedVisual?.focusVideoUrl;
+  const videoUrl = getVisualVideoUrl(selectedVisual, viewMode);
   const isShowingVideo = mediaMode === "video" && Boolean(videoUrl);
   const downloadUrl = isShowingVideo ? videoUrl : visualUrl;
   const backgroundImageUrl = viewMode === "focus"
     ? baseVisual?.focusImageUrl ?? baseVisual?.imageUrl
     : baseVisual?.imageUrl ?? baseVisual?.focusImageUrl;
-  const backgroundVideoUrl = mediaMode === "video"
-    ? viewMode === "focus"
-      ? baseVisual?.focusVideoUrl ?? baseVisual?.videoUrl
-      : baseVisual?.videoUrl ?? baseVisual?.focusVideoUrl
-    : undefined;
+  const backgroundVideoUrl = mediaMode === "video" ? getVisualVideoUrl(baseVisual, viewMode) : undefined;
   const canUseVideo = Boolean(videoUrl);
   const canUseFocusVisual = Boolean(
     (selectedVisual?.focusImageUrl || selectedVisual?.focusVideoUrl) && (selectedVisual?.imageUrl || selectedVisual?.videoUrl),
   );
+
   useEffect(() => {
     const savedMode = window.localStorage.getItem(VIEW_MODE_STORAGE_KEY);
     if (savedMode === "focus" || savedMode === "original") {
@@ -138,12 +138,44 @@ export function SkinDetailViewer({
     return undefined;
   }, []);
 
+  useEffect(() => {
+    const markActive = () => {
+      setAreControlsActive(true);
+
+      if (controlsIdleTimerRef.current) {
+        window.clearTimeout(controlsIdleTimerRef.current);
+      }
+
+      controlsIdleTimerRef.current = window.setTimeout(() => setAreControlsActive(false), 2000);
+    };
+
+    markActive();
+    window.addEventListener("pointermove", markActive);
+    window.addEventListener("keydown", markActive);
+
+    return () => {
+      window.removeEventListener("pointermove", markActive);
+      window.removeEventListener("keydown", markActive);
+      if (controlsIdleTimerRef.current) {
+        window.clearTimeout(controlsIdleTimerRef.current);
+      }
+    };
+  }, []);
+
   function toggleViewMode() {
     setViewMode((mode) => {
       const nextMode = mode === "focus" ? "original" : "focus";
       window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, nextMode);
+      setMediaMode(getVisualVideoUrl(selectedVisual, nextMode) ? "video" : "image");
       return nextMode;
     });
+  }
+
+  function handleSelectVisual(visualId: string) {
+    const nextVisual = visuals.find((visual) => visual.id === visualId);
+
+    setSelectedVisualId(visualId);
+    setMediaMode(getVisualVideoUrl(nextVisual, viewMode) ? "video" : "image");
   }
 
   async function handleDownload() {
@@ -181,7 +213,7 @@ export function SkinDetailViewer({
   }
 
   return (
-    <main className={styles.viewer} data-fit-mode={fitMode}>
+    <main className={styles.viewer} data-controls-state={areControlsActive ? "active" : "idle"} data-fit-mode={fitMode}>
       {backgroundVideoUrl ? (
         <video
           aria-hidden
@@ -226,69 +258,89 @@ export function SkinDetailViewer({
       </section>
 
       <div className={styles.topbar}>
-        {championHref ? (
-          <Link className={styles.heroLink} href={championHref} aria-label={`返回${championName}详情页`}>
-            <ArrowLeft size={18} aria-hidden />
-            <User size={18} aria-hidden />
-            <span>{championName}</span>
-          </Link>
-        ) : (
-          <span className={styles.heroLink}>
-            <User size={18} aria-hidden />
-            <span>{championName}</span>
-          </span>
-        )}
+        <ButtonGroup className={styles.titleActions} aria-label="皮肤信息">
+          {championHref ? (
+            <Button className={`${styles.cornerButton} ${styles.actionButton}`} variant="ghost" size="sm" asChild>
+              <Link href={championHref} aria-label={`返回${championName}详情页`}>
+                <ArrowLeft data-icon="inline-start" aria-hidden />
+                <User data-icon="inline-start" aria-hidden />
+                <span>{championName}</span>
+              </Link>
+            </Button>
+          ) : (
+            <Button className={`${styles.cornerButton} ${styles.actionButton}`} variant="ghost" size="sm" asChild>
+              <span aria-label={championName}>
+                <User data-icon="inline-start" aria-hidden />
+                <span>{championName}</span>
+              </span>
+            </Button>
+          )}
+        </ButtonGroup>
 
-        <div className={styles.controls} aria-label="原画工具">
-          <button
-            className={styles.iconButton}
+        <ButtonGroup className={styles.controls} aria-label="原画工具">
+          <Button
+            className={`${styles.cornerButton} ${styles.iconButton}`}
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => setFitMode((mode) => (mode === "cover" ? "contain" : "cover"))}
             title={fitMode === "cover" ? "适应屏幕" : "填充屏幕"}
             aria-label={fitMode === "cover" ? "适应屏幕" : "填充屏幕"}
           >
-            {fitMode === "cover" ? <Minimize2 size={18} aria-hidden /> : <Maximize2 size={18} aria-hidden />}
-          </button>
-          <button
-            className={styles.iconButton}
+            {fitMode === "cover" ? <Minimize2 data-icon="inline-start" aria-hidden /> : <Maximize2 data-icon="inline-start" aria-hidden />}
+          </Button>
+          <Button
+            className={`${styles.cornerButton} ${styles.iconButton}`}
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={toggleViewMode}
             disabled={!canUseFocusVisual}
             title="切换聚焦/原画"
             aria-label="切换聚焦/原画"
           >
-            <Users size={18} aria-hidden />
-          </button>
+            <Users data-icon="inline-start" aria-hidden />
+          </Button>
           {canUseVideo ? (
-            <button
-              className={styles.iconButton}
+            <Button
+              className={`${styles.cornerButton} ${styles.iconButton}`}
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setMediaMode((mode) => (mode === "video" ? "image" : "video"))}
               title="切换原画/动态原画"
               aria-label="切换原画/动态原画"
             >
-              <Film size={18} aria-hidden />
-            </button>
+              {mediaMode === "image" ? <Film data-icon="inline-start" aria-hidden /> : <ImageIcon data-icon="inline-start" aria-hidden />}
+            </Button>
           ) : null}
-          <button
-            className={styles.iconButton}
-            type="button"
-            onClick={() => setIsPanelOpen(true)}
-            title="查看详情"
-            aria-label="查看详情"
-          >
-            <Info size={18} aria-hidden />
-          </button>
-          <button
-            className={styles.downloadButton}
-            type="button"
+          <Button
+            className={`${styles.cornerButton} ${styles.iconButton}`}
+            variant="ghost"
+            size="sm"
             onClick={handleDownload}
             title="下载当前原画"
             aria-label="下载当前原画"
           >
-            <Download size={18} aria-hidden />
-          </button>
-        </div>
+            <Download data-icon="inline-start" aria-hidden />
+          </Button>
+          <Button
+            className={`${styles.cornerButton} ${styles.actionButton} ${styles.skinTitleButton}`}
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsPanelOpen(true)}
+            title="查看详情"
+            aria-label="查看详情"
+          >
+            {rarityIconUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- Rarity gems are small dictionary assets.
+              <img src={rarityIconUrl} alt="" />
+            ) : null}
+            <span>{selectedVisual?.name ?? skinName}</span>
+            <Info data-icon="inline-start" aria-hidden />
+          </Button>
+        </ButtonGroup>
       </div>
 
       {prevSkin ? <SkinNav className={styles.skinNavLeft} direction="prev" skin={prevSkin} /> : null}
@@ -296,7 +348,7 @@ export function SkinDetailViewer({
 
       {visuals.length > 1 ? (
         <ChromaDock
-          onSelectVisual={setSelectedVisualId}
+          onSelectVisual={handleSelectVisual}
           selectedVisualId={selectedVisualId}
           visuals={visuals}
         />
@@ -314,9 +366,11 @@ export function SkinDetailViewer({
               <CopyButton value={selectedVisual?.name ?? skinName} />
             </h2>
           </div>
-          <button className={styles.iconButton} type="button" onClick={() => setIsPanelOpen(false)} aria-label="关闭详情">
-            <X size={18} aria-hidden />
-          </button>
+          <ButtonGroup className={styles.panelActions} aria-label="详情操作">
+            <Button className={`${styles.cornerButton} ${styles.iconButton}`} type="button" variant="ghost" size="icon" onClick={() => setIsPanelOpen(false)} aria-label="关闭详情">
+              <X data-icon="inline-start" aria-hidden />
+            </Button>
+          </ButtonGroup>
         </div>
 
         <section className={styles.panelDescription}>
@@ -538,15 +592,17 @@ function ChromaDock({
         ) : null}
       </div>
       {visuals.length ? (
-        <div className={styles.chromaLoopHint} aria-label="炫彩分页器" onMouseEnter={openDock} onMouseLeave={scheduleCloseDock}>
+        <ButtonGroup className={styles.chromaLoopHint} aria-label="炫彩分页器" onMouseEnter={openDock} onMouseLeave={scheduleCloseDock}>
           {visuals.map((visual) => (
-            <button
+            <Button
               aria-label={`切换到${visual.name}`}
               aria-pressed={visual.id === selectedVisualId}
-              className={visual.id === selectedVisualId ? styles.chromaLoopHintActive : ""}
+              className={styles.chromaLoopHintButton}
               key={visual.id}
               onClick={() => onSelectVisual(visual.id)}
+              size="sm"
               type="button"
+              variant="outline"
             >
               <ChromaColorSwatch
                 colors={normalizeChromaColors(visual.colors)}
@@ -555,9 +611,9 @@ function ChromaDock({
                 size={18}
                 stopPropagation={false}
               />
-            </button>
+            </Button>
           ))}
-        </div>
+        </ButtonGroup>
       ) : null}
     </div>
   );
@@ -786,6 +842,12 @@ function buildDownloadFileName(name: string, viewMode: "focus" | "original", isV
   return `${sanitizeFileName(name)}-${modeText}-${mediaText}.${extension}`;
 }
 
+function getVisualVideoUrl(visual: SkinVisual | undefined, viewMode: "focus" | "original") {
+  return viewMode === "focus"
+    ? visual?.focusVideoUrl ?? visual?.videoUrl
+    : visual?.videoUrl ?? visual?.focusVideoUrl;
+}
+
 function getFileExtension(url: string) {
   const pathname = new URL(url, window.location.href).pathname;
   const extension = pathname.split(".").pop()?.toLowerCase();
@@ -808,13 +870,16 @@ function SkinNav({
   const isPrev = direction === "prev";
 
   return (
-    <Link className={`${styles.skinNav} ${className}`} href={skin.href}>
-      {isPrev ? <ArrowLeft size={18} aria-hidden /> : null}
-      <span className={styles.skinNavText}>
-        <small>{isPrev ? "上一款" : "下一款"}</small>
-        <strong>{skin.label}</strong>
-      </span>
-      {isPrev ? null : <ArrowRight size={18} aria-hidden />}
-    </Link>
+    <ButtonGroup className={`${styles.skinNavGroup} ${className}`} aria-label={isPrev ? "上一个皮肤" : "下一个皮肤"}>
+      <Button className={`${styles.cornerButton} ${styles.skinNav}`} variant="ghost" size="sm" asChild>
+        <Link href={skin.href}>
+          {isPrev ? <ArrowLeft data-icon="inline-start" aria-hidden /> : null}
+          <span className={styles.skinNavText}>
+            <strong>{skin.label}</strong>
+          </span>
+          {isPrev ? null : <ArrowRight data-icon="inline-end" aria-hidden />}
+        </Link>
+      </Button>
+    </ButtonGroup>
   );
 }

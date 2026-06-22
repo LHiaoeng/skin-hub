@@ -1,6 +1,7 @@
 ﻿import { Settings } from "lucide-react";
 import Link from "next/link";
 
+import { HeaderBackButton } from "@/components/layout/header-back-button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div className="flex min-w-0 flex-1 items-center gap-4">
+          <HeaderBackButton />
           <Link className="shrink-0 text-lg font-black uppercase tracking-[0.16em]" href="/" aria-label="Skin Hub 首页">
             Skin Hub
           </Link>

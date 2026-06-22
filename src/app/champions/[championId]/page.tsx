@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowUp, Home } from "lucide-react";
 
 import { RarityBadge } from "@/components/home/rarity-badge";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -10,8 +10,10 @@ import { SkinEmblems } from "@/components/skin/skin-emblems";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { CopyButton } from "@/components/ui/copy-button";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { getChampion, getChampionSkins, getChampions, getLolDictionaries } from "@/lib/api/backend-client";
 import { normalizeImageUrl } from "@/lib/images/cdn";
+import { getContentSection } from "@/lib/navigation/content-sections";
 import { championPath, parseRouteId, skinPath } from "@/lib/routing/slug";
 import { breadcrumbSchema } from "@/lib/seo/schema";
 import type { Champion, Skin, SkinDictItem } from "@/types/lol";
@@ -97,10 +99,13 @@ export default async function ChampionDetailPage({ params, searchParams }: Champ
   const enName = champion.nameEng ?? "English name unavailable";
   const enTitle = champion.titleEng ?? "English title unavailable";
   const description = champion.description ?? "后端暂未提供该英雄的中文背景描述。";
+  const englishDescription = champion.engDescription;
   const fullChineseName = `${zhTitle} ${champion.name}`;
   const fullEnglishName = `${enTitle} ${enName}`;
   const roleLabels = splitCsv(champion.roles).map((role) => getDictText(dictionaries.championRoles, role));
   const positionLabels = champion.positions?.map((position) => getDictText(dictionaries.championPositions, position)) ?? [];
+  const championSection = getContentSection("champions");
+  const ChampionIcon = championSection.icon;
 
   return (
     <main className={styles.shell}>
@@ -129,11 +134,18 @@ export default async function ChampionDetailPage({ params, searchParams }: Champ
 
       <article className={styles.content}>
         <nav className={styles.breadcrumb} aria-label="面包屑">
-          <Link href="/">首页</Link>
+          <Link href="/">
+            <Home aria-hidden="true" className={styles.navigationIcon} />
+            首页
+          </Link>
           <span>/</span>
-          <Link href="/champions">英雄</Link>
+          <Link href={championSection.href}>
+            <ChampionIcon aria-hidden="true" className={styles.navigationIcon} />
+            {championSection.label}
+          </Link>
           <span>/</span>
           <span className={styles.copyText}>
+            <ChampionIcon aria-hidden="true" className={styles.navigationIcon} />
             {fullChineseName}
             <CopyButton className={styles.actionButton} value={fullChineseName} />
           </span>
@@ -147,10 +159,25 @@ export default async function ChampionDetailPage({ params, searchParams }: Champ
               </h1>
             </div>
             <div className={styles.englishGroup}>
-              <p>
-                <span>{fullEnglishName}</span>
-                <CopyButton className={styles.actionButton} value={fullEnglishName} />
-              </p>
+              {englishDescription ? (
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <p className={styles.hoverCardTrigger}>
+                      <span>{fullEnglishName}</span>
+                      <CopyButton className={styles.actionButton} value={fullEnglishName} />
+                    </p>
+                  </HoverCardTrigger>
+                  <HoverCardContent align="start" className={styles.englishHoverCard}>
+                    <strong>{fullEnglishName}</strong>
+                    <p>{englishDescription}</p>
+                  </HoverCardContent>
+                </HoverCard>
+              ) : (
+                <p>
+                  <span>{fullEnglishName}</span>
+                  <CopyButton className={styles.actionButton} value={fullEnglishName} />
+                </p>
+              )}
             </div>
             <div className={styles.description}>
               <p>

@@ -14,17 +14,17 @@
 
 .latestList {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
 .latestItem {
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr) auto;
-  gap: 9px;
+  gap: 8px;
   align-items: center;
   min-height: 58px;
-  padding: 7px 9px;
+  padding: 7px 10px;
   border: 1px solid hsl(var(--border));
   border-radius: 12px;
   background: hsl(var(--card));
@@ -44,7 +44,7 @@
   height: 42px;
   overflow: hidden;
   border: 1px solid hsl(var(--border));
-  border-radius: 10px;
+  border-radius: 9px;
   background: hsl(var(--muted));
 }
 
@@ -64,7 +64,11 @@
 }
 
 .info strong {
-  font-size: 0.92rem;
+  font-size: 0.94rem;
+}
+
+.latestItem > :last-child {
+  margin-right: 0;
 }
 
 .empty {
@@ -95,10 +99,6 @@
 
   .latestList {
     grid-template-columns: 1fr;
-  }
-
-  .latestItem {
-    grid-template-columns: 40px minmax(0, 1fr) auto;
   }
 
 }

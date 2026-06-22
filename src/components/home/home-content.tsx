@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { FlaskConical } from "lucide-react";
 
 import { HomeTabs, type HomeTabKey } from "@/components/home/home-tabs";
 import { RarityBadge } from "@/components/home/rarity-badge";
@@ -9,6 +10,7 @@ import { getHomeData } from "@/lib/api/backend-client";
 import { normalizeImageUrl } from "@/lib/images/cdn";
 import { skinPath } from "@/lib/routing/slug";
 import { websiteSchema } from "@/lib/seo/schema";
+import type { SkinlineSort } from "@/lib/lol/skinline-sort";
 
 import styles from "@/app/page.module.css";
 
@@ -17,11 +19,13 @@ export async function HomeContent({
   championBasePath = "/",
   selectedRole,
   selectedPosition,
+  skinlineSort,
 }: {
   activeTab?: HomeTabKey;
   championBasePath?: "/" | "/champions";
   selectedRole?: string;
   selectedPosition?: string;
+  skinlineSort?: SkinlineSort;
 }) {
   const data = await getHomeData();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -31,7 +35,7 @@ export async function HomeContent({
       <JsonLd data={websiteSchema(siteUrl)} />
 
       <section className={styles.section} id="latest-skins">
-        <SectionTitle title="PBE 新增" />
+        <SectionTitle icon={FlaskConical} title="PBE 新增" />
         {data.latestSkins.length > 0 ? (
           <div className={styles.latestList}>
             {data.latestSkins.map((skin, index) => {
@@ -71,6 +75,7 @@ export async function HomeContent({
         selectedRole={selectedRole}
         universes={data.universes}
         skinlines={data.skinlines}
+        skinlineSort={skinlineSort}
       />
     </main>
   );

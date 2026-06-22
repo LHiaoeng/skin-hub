@@ -85,6 +85,7 @@ export interface Champion {
   titleEng?: string;
   alias?: string;
   description?: string;
+  engDescription?: string;
   roles?: string;
   positions?: string[];
   squarePortraitPath?: string;
@@ -96,6 +97,13 @@ export interface Skinline {
   name: string;
   engName?: string;
   description?: string;
+  engDescription?: string;
+  skins?: Skin[];
+  universe?: Universe;
+}
+
+export interface SkinlineSummary extends Skinline {
+  skinCount: number;
 }
 
 export interface Universe {
@@ -104,7 +112,23 @@ export interface Universe {
   name: string;
   engName?: string;
   imagePath?: string;
+  description?: string;
+  engDescription?: string;
   lolSkinlineIdSets?: string;
+  skinlines?: Skinline[];
+}
+
+export interface SkinlineDetail extends SkinlineSummary {
+  skins: Skin[];
+  universe?: Universe;
+}
+
+export interface UniverseSkinline extends Skinline {
+  skins: Skin[];
+}
+
+export interface UniverseDetail extends Universe {
+  skinlines: UniverseSkinline[];
 }
 
 export interface HomeData {
@@ -113,4 +137,8 @@ export interface HomeData {
   skinlines: Skinline[];
   universes: Universe[];
   dictionaries: LolDictionaries;
+}
+
+export interface HomePageData extends Omit<HomeData, "skinlines"> {
+  skinlines: SkinlineSummary[];
 }

@@ -148,15 +148,12 @@ function buildViewerProps({
       skin.releaseTime ? `上线：${skin.releaseTime}` : "",
       ...emblemNames,
     ].filter(Boolean),
-    basicDetails: [
+    cnDetails: [
       { label: "皮肤 ID", value: String(skin.riotSkinId) },
       { label: "英雄", value: championName },
       { label: "英雄 ID", value: String(skin.championId) },
-      { label: "英文名", value: skin.nameEng ?? "未提供" },
       { label: "是否正式上线", value: skin.isPbeOnly ? "否" : "是" },
-      skin.releaseTime ? { label: "上线时间", value: skin.releaseTime } : undefined,
-    ].filter((item): item is { label: string; value: string } => Boolean(item)),
-    cnDetails: [
+      ...(skin.releaseTime ? [{ label: "上线时间", value: skin.releaseTime }] : []),
       {
         label: "国服皮肤品质",
         icons: rarityIconUrl
@@ -176,11 +173,10 @@ function buildViewerProps({
           popoverIconUrl: item.iconUrl,
         })),
       },
-      { label: "限定状态", value: skin.isLegacy ? "限定" : "非限定" },
     ],
     globalDetails: [
+      { label: "英文名", value: skin.nameEng ?? "未提供" },
       { label: "直营服皮肤品质", icons: globalRarityIconUrl ? [{ name: globalRarityName, iconUrl: globalRarityIconUrl }] : [] },
-      { label: "直营服限定", value: skin.isLegacyGlobal ? "限定" : "非限定" },
     ],
     skinlines: skinlines.map((item) => ({
       label: item.name,
@@ -195,20 +191,17 @@ function buildViewerProps({
     externalLinks: [
       champion
         ? {
-            label: `去语音站收听${championName}的语音`,
+            label: `去布锅锅语音站收听${championName}的语音`,
             href: `https://voice.buguoguo.cn/#/voice/${champion.heroId}`,
-            icon: "voice" as const,
           }
         : undefined,
       {
         label: "去哔哩哔哩查看该皮肤演示视频",
         href: `https://space.bilibili.com/9385598/search/video?keyword=${encodeURIComponent(skin.name)}`,
-        icon: "video" as const,
       },
       {
         label: "去卡达查看 3D 模型",
         href: `https://3d.buguoguo.cn/model-viewer?id=${skin.riotSkinId}`,
-        icon: "model" as const,
       },
     ].filter((item): item is SkinDetailViewerProps["externalLinks"][number] => Boolean(item)),
     prevSkin: prevSkin ? { label: prevSkin.name, href: skinPath(prevSkin) } : undefined,
@@ -288,6 +281,8 @@ function buildVisuals(skin: Skin, chromas: SkinChroma[]): SkinVisual[] {
   const chromaVisuals = chromas.map((chroma) => ({
     id: `chroma-${chroma.id}`,
     name: chroma.name,
+    isChroma: true,
+    chromaImageUrl: normalizeImageUrl(chroma.chromaPath, skin.isPbeOnly),
     imageUrl: normalizeImageUrl(
       chroma.uncenteredSplashPath ?? chroma.splashPath ?? chroma.chromaPath ?? chroma.tilePath ?? skin.uncenteredSplashPath,
       skin.isPbeOnly,
@@ -307,22 +302,25 @@ function buildVisuals(skin: Skin, chromas: SkinChroma[]): SkinVisual[] {
 }
 
 function parseSkinChromas(skin: Skin): SkinChroma[] {
-  if (skin.chromas?.length) {
-    return skin.chromas;
-  }
-
+  const chromasById = new Map<number, SkinChroma>();
   const raw = skin.chromasJson?.trim();
-  if (!raw) {
-    return [];
+
+  if (raw) {
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      const items = Array.isArray(parsed) ? parsed : isRecord(parsed) && Array.isArray(parsed.chromas) ? parsed.chromas : [];
+      items
+        .map(normalizeChroma)
+        .filter((item): item is SkinChroma => item !== undefined)
+        .forEach((chroma) => chromasById.set(chroma.id, chroma));
+    } catch {
+      // The structured chroma list remains authoritative when the legacy JSON is invalid.
+    }
   }
 
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    const items = Array.isArray(parsed) ? parsed : isRecord(parsed) && Array.isArray(parsed.chromas) ? parsed.chromas : [];
-    return items.map(normalizeChroma).filter((item): item is SkinChroma => item !== undefined);
-  } catch {
-    return [];
-  }
+  skin.chromas?.forEach((chroma) => chromasById.set(chroma.id, chroma));
+
+  return Array.from(chromasById.values());
 }
 
 function normalizeChroma(value: unknown): SkinChroma | undefined {

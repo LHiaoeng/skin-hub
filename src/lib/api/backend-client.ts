@@ -1,4 +1,15 @@
-import type { Champion, HomeData, LolDictionaries, Skin, SkinDictItem, Skinline, Universe } from "@/types/lol";
+import type {
+  Champion,
+  HomePageData,
+  LolDictionaries,
+  Skin,
+  SkinDictItem,
+  SkinlineSummary,
+  SkinlineDetail,
+  Universe,
+  UniverseDetail,
+} from "@/types/lol";
+import { skinlineDetailPath } from "@/lib/api/skinline-contract";
 
 const backendBaseUrl = process.env.BACKEND_BASE_URL ?? "http://localhost:9527";
 
@@ -7,6 +18,7 @@ interface PageResult<T> {
   list?: T[];
   data?: T[];
   rows?: T[];
+  total?: number;
 }
 
 interface SkinQueryParams {
@@ -16,6 +28,7 @@ interface SkinQueryParams {
   keyword?: string;
   riotSkinId?: number;
   championId?: number;
+  skinlineId?: number;
   revalidate?: number;
 }
 
@@ -39,12 +52,16 @@ async function request<T>(path: string, revalidate: number): Promise<T | undefin
     });
 
     if (!response.ok) {
+      if (response.status !== 404) {
+        console.error(`[backend-client] ${path} returned HTTP ${response.status}.`);
+      }
       return undefined;
     }
 
     const payload: unknown = await response.json();
     return unwrapPayload<T>(payload);
-  } catch {
+  } catch (error) {
+    console.error(`[backend-client] ${path} request failed.`, error);
     return undefined;
   }
 }
@@ -110,7 +127,7 @@ function toSearchParams(params: Record<string, string | number | undefined>): st
   return searchParams.toString();
 }
 
-export async function getHomeData(): Promise<HomeData> {
+export async function getHomeData(): Promise<HomePageData> {
   const [latestSkins, champions, skinlines, universes, dictionaries] = await Promise.all([
     getSkins({ size: 12, isPbeOnly: 1 }),
     getChampions(),
@@ -155,6 +172,7 @@ export async function getSkins(params: SkinQueryParams = {}): Promise<Skin[]> {
     keyword: params.keyword,
     riotSkinId: params.riotSkinId,
     championId: params.championId,
+    skinlineId: params.skinlineId,
   });
 
   const result = await requestFirst<Skin[] | PageResult<Skin>>(
@@ -217,13 +235,24 @@ export async function getChampionSkins(championId: number, revalidate = 3600): P
   });
 }
 
-export async function getSkinlines(): Promise<Skinline[]> {
-  const result = await requestFirst<Skinline[] | PageResult<Skinline>>(
-    ["/rest/lol/skinlines?page=1&size=200", "/lol/skinline/page?page=1&size=200"],
-    86400,
-  );
+export async function getSkinlines(): Promise<SkinlineSummary[]> {
+  const result = await request<SkinlineSummary[] | PageResult<SkinlineSummary>>("/rest/lol/skinlines", 86400);
+  const skinlines = unwrapList(result);
+  skinlines.forEach(assertValidSkinlineSummary);
 
-  return unwrapList(result);
+  return skinlines;
+}
+
+export async function getSkinline(riotSkinlineId: number): Promise<SkinlineDetail | undefined> {
+  const detail = await request<SkinlineDetail>(skinlineDetailPath(riotSkinlineId), 86400);
+  if (!detail) {
+    return undefined;
+  }
+  assertValidSkinlineSummary(detail);
+  if (!Array.isArray(detail.skins) || detail.skins.length !== detail.skinCount) {
+    throw new Error(`[backend-client] Invalid skinline detail contract for ${riotSkinlineId}.`);
+  }
+  return detail;
 }
 
 export async function getUniverses(): Promise<Universe[]> {
@@ -233,4 +262,73 @@ export async function getUniverses(): Promise<Universe[]> {
   );
 
   return unwrapList(result);
+}
+
+export async function getUniverse(lolUniverseId: number): Promise<UniverseDetail | undefined> {
+  const [detail, universes, allSkinlines] = await Promise.all([
+    requestFirst<Universe>([`/rest/lol/universes/${lolUniverseId}`], 86400),
+    getUniverses(),
+    getSkinlines(),
+  ]);
+  const universe = detail ?? universes.find((item) => item.lolUniverseId === lolUniverseId);
+
+  if (!universe) {
+    return undefined;
+  }
+
+  const relatedIds = splitIdSet(universe.lolSkinlineIdSets);
+  const relatedSkinlines = universe.skinlines?.length
+    ? universe.skinlines
+    : allSkinlines.filter((item) => relatedIds.includes(item.riotSkinlineId));
+  const skinlines = await Promise.all(
+    relatedSkinlines.map(async (skinline) => ({
+      ...skinline,
+      skins:
+        skinline.skins ??
+        (await getSkinlineSkins(skinline.riotSkinlineId)),
+    })),
+  );
+
+  return {
+    ...universe,
+    skinlines,
+  };
+}
+
+async function getSkinlineSkins(skinlineId: number): Promise<Skin[]> {
+  const pageSize = 100;
+  const firstPage = await requestFirst<Skin[] | PageResult<Skin>>(
+    [
+      `/rest/lol/skins?${toSearchParams({ page: 1, size: pageSize, skinlineId })}`,
+      `/lol/skin/page?${toSearchParams({ page: 1, size: pageSize, skinlineId })}`,
+    ],
+    3600,
+  );
+  const firstRecords = unwrapList(firstPage);
+
+  if (!firstPage || Array.isArray(firstPage) || !firstPage.total || firstPage.total <= pageSize) {
+    return firstRecords;
+  }
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: Math.ceil(firstPage.total / pageSize) - 1 }, (_, index) =>
+      getSkins({ page: index + 2, size: pageSize, skinlineId, revalidate: 3600 }),
+    ),
+  );
+  return [...firstRecords, ...remainingPages.flat()];
+}
+
+function assertValidSkinlineSummary(skinline: SkinlineSummary) {
+  if (!Number.isInteger(skinline.skinCount) || skinline.skinCount < 0) {
+    throw new Error(`[backend-client] Invalid skinCount for skinline ${skinline.riotSkinlineId}.`);
+  }
+}
+
+function splitIdSet(value: string | undefined): number[] {
+  return (
+    value
+      ?.split(",")
+      .map((item) => Number(item.trim()))
+      .filter((item) => Number.isInteger(item) && item > 0) ?? []
+  );
 }

@@ -5,7 +5,15 @@ import { Check, Copy } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-export function CopyButton({ className, value }: { className?: string; value: string | number | undefined }) {
+export function CopyButton({
+  className,
+  value,
+  label = "复制",
+}: {
+  className?: string;
+  value: string | number | undefined;
+  label?: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   if (value === undefined || value === null || value === "") {
@@ -24,11 +32,16 @@ export function CopyButton({ className, value }: { className?: string; value: st
       type="button"
       variant="ghost"
       size="icon-xs"
+      style={{ width: "1em", height: "1em", fontSize: "inherit" }}
       onClick={handleCopy}
-      title={copied ? "复制成功" : "复制"}
-      aria-label={copied ? "复制成功" : "复制"}
+      title={copied ? "复制成功" : label}
+      aria-label={copied ? "复制成功" : label}
     >
-      {copied ? <Check aria-hidden="true" data-icon="inline-end" /> : <Copy aria-hidden="true" data-icon="inline-end" />}
+      {copied ? (
+        <Check aria-hidden="true" data-icon="inline-end" style={{ width: "1em", height: "1em" }} />
+      ) : (
+        <Copy aria-hidden="true" data-icon="inline-end" style={{ width: "1em", height: "1em" }} />
+      )}
     </Button>
   );
 }

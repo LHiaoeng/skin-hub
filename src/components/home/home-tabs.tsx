@@ -2,22 +2,20 @@
 import Link from "next/link";
 
 import { normalizeImageUrl } from "@/lib/images/cdn";
+import { contentSections, type ContentSectionKey } from "@/lib/navigation/content-sections";
 import { championPath } from "@/lib/routing/slug";
 import { UniversesTree } from "@/features/universes/universes-tree";
-import type { Champion, SkinDictItem, Skinline, Universe } from "@/types/lol";
+import type { Champion, SkinDictItem, SkinlineSummary, Universe } from "@/types/lol";
+import type { SkinlineSort } from "@/lib/lol/skinline-sort";
+import { SkinlineList } from "@/components/home/skinline-list";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { Card, CardContent } from "@/components/ui/card";
 import styles from "./home-tabs.module.css";
 
-export type HomeTabKey = "champions" | "universes" | "skinlines" | "coming";
-
-const tabs: Array<{ key: HomeTabKey; label: string; href: string }> = [
-  { key: "champions", label: "英雄", href: "/champions" },
-  { key: "universes", label: "皮肤宇宙", href: "/universes" },
-  { key: "skinlines", label: "皮肤套装", href: "/skinlines" },
-  { key: "coming", label: "后续内容", href: "/coming" },
-];
+export type HomeTabKey = ContentSectionKey;
 
 function getChampionFilterHref({
   basePath,
@@ -63,16 +61,18 @@ export function HomeTabs({
   selectedPosition,
   activeTab = "champions",
   championBasePath = "/champions",
+  skinlineSort = { key: "name", order: "asc" },
 }: {
   champions: Champion[];
   universes: Universe[];
-  skinlines: Skinline[];
+  skinlines: SkinlineSummary[];
   championRoles: SkinDictItem[];
   championPositions: SkinDictItem[];
   selectedRole?: string;
   selectedPosition?: string;
   activeTab?: HomeTabKey;
   championBasePath?: "/" | "/champions";
+  skinlineSort?: SkinlineSort;
 }) {
   const filteredChampions = champions.filter(
     (ch) => hasChampionRole(ch, selectedRole) && hasChampionPosition(ch, selectedPosition),
@@ -82,11 +82,17 @@ export function HomeTabs({
     <section className={styles.section}>
       <Tabs defaultValue={activeTab} className="w-full">
         <TabsList className="mb-4">
-          {tabs.map((tab) => (
-            <TabsTrigger key={tab.key} value={tab.key} asChild>
-              <Link href={tab.href}>{tab.label}</Link>
-            </TabsTrigger>
-          ))}
+          {contentSections.map((section) => {
+            const Icon = section.icon;
+            return (
+              <TabsTrigger key={section.key} value={section.key} asChild>
+                <Link href={section.href}>
+                  <Icon aria-hidden="true" className={styles.tabIcon} />
+                  {section.label}
+                </Link>
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
 
         <TabsContent value="champions">
@@ -95,45 +101,49 @@ export function HomeTabs({
               <div className={styles.filters} aria-label="英雄筛选">
                 <div className={styles.filterGroup}>
                   <span>位置</span>
-                  <Link
-                    className={!selectedPosition ? `${styles.filter} ${styles.filterActive}` : styles.filter}
-                    href={getChampionFilterHref({ basePath: championBasePath, role: selectedRole })}
-                  >
-                    全部
-                  </Link>
-                  {championPositions.map((item) => {
-                    const value = getDictValue(item);
-                    return value ? (
-                      <Link
-                        className={selectedPosition === value ? `${styles.filter} ${styles.filterActive}` : styles.filter}
-                        href={getChampionFilterHref({ basePath: championBasePath, role: selectedRole, position: value })}
-                        key={value}
-                      >
-                        {getDictName(item)}
-                      </Link>
-                    ) : null;
-                  })}
+                  <ButtonGroup aria-label="英雄位置筛选">
+                    <ChampionFilterButton
+                      active={!selectedPosition}
+                      href={getChampionFilterHref({ basePath: championBasePath, role: selectedRole })}
+                    >
+                      全部
+                    </ChampionFilterButton>
+                    {championPositions.map((item) => {
+                      const value = getDictValue(item);
+                      return value ? (
+                        <ChampionFilterButton
+                          active={selectedPosition === value}
+                          href={getChampionFilterHref({ basePath: championBasePath, role: selectedRole, position: value })}
+                          key={value}
+                        >
+                          {getDictName(item)}
+                        </ChampionFilterButton>
+                      ) : null;
+                    })}
+                  </ButtonGroup>
                 </div>
                 <div className={styles.filterGroup}>
                   <span>定位</span>
-                  <Link
-                    className={!selectedRole ? `${styles.filter} ${styles.filterActive}` : styles.filter}
-                    href={getChampionFilterHref({ basePath: championBasePath, position: selectedPosition })}
-                  >
-                    全部
-                  </Link>
-                  {championRoles.map((item) => {
-                    const value = getDictValue(item);
-                    return value ? (
-                      <Link
-                        className={selectedRole === value ? `${styles.filter} ${styles.filterActive}` : styles.filter}
-                        href={getChampionFilterHref({ basePath: championBasePath, role: value, position: selectedPosition })}
-                        key={value}
-                      >
-                        {getDictName(item)}
-                      </Link>
-                    ) : null;
-                  })}
+                  <ButtonGroup aria-label="英雄定位筛选">
+                    <ChampionFilterButton
+                      active={!selectedRole}
+                      href={getChampionFilterHref({ basePath: championBasePath, position: selectedPosition })}
+                    >
+                      全部
+                    </ChampionFilterButton>
+                    {championRoles.map((item) => {
+                      const value = getDictValue(item);
+                      return value ? (
+                        <ChampionFilterButton
+                          active={selectedRole === value}
+                          href={getChampionFilterHref({ basePath: championBasePath, role: value, position: selectedPosition })}
+                          key={value}
+                        >
+                          {getDictName(item)}
+                        </ChampionFilterButton>
+                      ) : null;
+                    })}
+                  </ButtonGroup>
                 </div>
               </div>
               {filteredChampions.length > 0 ? (
@@ -181,15 +191,7 @@ export function HomeTabs({
           <Card>
             <CardContent className="pt-6">
               {skinlines.length > 0 ? (
-                <div className={styles.grid}>
-                  {skinlines.map((skinline) => (
-                    <article className={styles.card} key={skinline.riotSkinlineId}>
-                      <span className={styles.mark}>{skinline.engName?.slice(0, 2) ?? "SL"}</span>
-                      <h3>{skinline.name}</h3>
-                      <p>{skinline.description ?? skinline.engName ?? "国服皮肤套装资料"}</p>
-                    </article>
-                  ))}
-                </div>
+                <SkinlineList skinlines={skinlines} sort={skinlineSort} />
               ) : (
                 <div className={styles.empty}>公开接口暂未返回皮肤套装数据。</div>
               )}
@@ -214,5 +216,15 @@ export function HomeTabs({
         </TabsContent>
       </Tabs>
     </section>
+  );
+}
+
+function ChampionFilterButton({ active, href, children }: { active: boolean; href: string; children: React.ReactNode }) {
+  return (
+    <Button asChild className={active ? "bg-accent text-accent-foreground" : undefined} size="sm" variant="outline">
+      <Link href={href} aria-current={active ? "page" : undefined}>
+        {children}
+      </Link>
+    </Button>
   );
 }

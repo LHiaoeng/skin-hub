@@ -37,3 +37,36 @@ export function breadcrumbSchema(items: Array<{ name: string; url: string }>) {
     })),
   };
 }
+
+export function collectionPageSchema({
+  name,
+  description,
+  url,
+  imageUrl,
+  items,
+}: {
+  name: string;
+  description: string;
+  url: string;
+  imageUrl?: string;
+  items: Array<{ name: string; url: string }>;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name,
+    description,
+    url,
+    primaryImageOfPage: imageUrl,
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: items.length,
+      itemListElement: items.map((item, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: item.name,
+        url: item.url,
+      })),
+    },
+  };
+}

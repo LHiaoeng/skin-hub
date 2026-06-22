@@ -1,32 +1,32 @@
 .shell {
   --champion-bg: #e9f1f7;
   --champion-text: #06111c;
-  --champion-muted: rgb(22 42 61 / 0.72);
-  --champion-subtle: rgb(22 42 61 / 0.56);
+  --champion-muted: rgb(22 42 61 / 0.76);
+  --champion-subtle: rgb(22 42 61 / 0.58);
   --champion-panel: rgb(255 255 255 / 0.56);
   --champion-border: rgb(6 17 28 / 0.16);
-  --champion-accent: rgb(0 96 134 / 0.7);
   --champion-scrim:
-    linear-gradient(90deg, rgb(244 248 252 / 0.96) 0%, rgb(244 248 252 / 0.76) 38%, rgb(244 248 252 / 0.9) 100%),
-    linear-gradient(180deg, rgb(244 248 252 / 0.8) 0%, rgb(244 248 252 / 0.28) 38%, rgb(244 248 252 / 0.92) 100%);
+    linear-gradient(90deg, rgb(244 248 252 / 0.96) 0%, rgb(244 248 252 / 0.72) 42%, rgb(244 248 252 / 0.9) 100%),
+    linear-gradient(180deg, rgb(244 248 252 / 0.76) 0%, rgb(244 248 252 / 0.3) 38%, rgb(244 248 252 / 0.94) 100%);
   position: relative;
   min-height: calc(100vh - 64px);
   overflow: hidden;
   color: var(--champion-text);
-  background: var(--champion-bg);
+  background:
+    linear-gradient(135deg, rgb(0 96 134 / 0.13), transparent 45%),
+    var(--champion-bg);
 }
 
 :global(.dark) .shell {
   --champion-bg: #050b10;
   --champion-text: #f8fbff;
-  --champion-muted: rgb(218 232 247 / 0.78);
-  --champion-subtle: rgb(221 235 252 / 0.62);
-  --champion-panel: rgb(5 11 16 / 0.34);
+  --champion-muted: rgb(218 232 247 / 0.8);
+  --champion-subtle: rgb(221 235 252 / 0.64);
+  --champion-panel: rgb(5 11 16 / 0.38);
   --champion-border: rgb(229 241 255 / 0.18);
-  --champion-accent: rgb(91 208 255 / 0.68);
   --champion-scrim:
-    linear-gradient(90deg, rgb(5 11 16 / 0.96) 0%, rgb(5 11 16 / 0.78) 34%, rgb(5 11 16 / 0.88) 100%),
-    linear-gradient(180deg, rgb(5 11 16 / 0.68) 0%, rgb(5 11 16 / 0.2) 38%, rgb(5 11 16 / 0.92) 100%);
+    linear-gradient(90deg, rgb(5 11 16 / 0.96) 0%, rgb(5 11 16 / 0.74) 38%, rgb(5 11 16 / 0.88) 100%),
+    linear-gradient(180deg, rgb(5 11 16 / 0.68) 0%, rgb(5 11 16 / 0.24) 38%, rgb(5 11 16 / 0.94) 100%);
 }
 
 .background {
@@ -34,7 +34,7 @@
   inset: 0 !important;
   z-index: 0;
   object-fit: cover;
-  filter: blur(2px) saturate(1);
+  filter: blur(2px) saturate(1.02);
   transform: scale(1.06);
 }
 
@@ -55,27 +55,31 @@
   padding: 16px 0 72px;
 }
 
-.breadcrumb {
+.breadcrumb,
+.breadcrumbItem {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
+}
+
+.breadcrumb {
   color: var(--champion-subtle);
   font-size: 0.8rem;
+}
+
+.breadcrumb a:hover,
+.collectionSection h2 a:hover {
+  color: var(--champion-text);
 }
 
 .breadcrumb a {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: inherit;
-  text-decoration: none;
 }
 
-.breadcrumb a:hover {
-  color: var(--champion-text);
-}
-
-.copyText {
+.currentBreadcrumb {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -85,6 +89,21 @@
   width: 1em;
   height: 1em;
   flex: none;
+}
+
+.breadcrumbCopyButton {
+  width: 1.3em;
+  height: 1.3em;
+  padding: 0;
+  color: inherit;
+  background: transparent !important;
+  opacity: 0.68;
+}
+
+.breadcrumbCopyButton:hover,
+.breadcrumbCopyButton:focus-visible {
+  color: var(--champion-text);
+  opacity: 1;
 }
 
 .hero {
@@ -97,38 +116,40 @@
 .heroCopy {
   display: grid;
   gap: 12px;
-  max-width: 840px;
+  max-width: 850px;
 }
 
-.titleGroup,
-.englishGroup {
-  display: grid;
-  gap: 7px;
-}
-
-.titleGroup h1,
-.englishGroup p {
+.heroCopy h1 {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 0;
-}
-
-.titleGroup h1 {
-  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 clamp(8px, 1.5vw, 16px);
   font-size: clamp(2rem, 4.5vw, 3.5rem);
   font-weight: 900;
-  line-height: 1;
+  line-height: 1.05;
   letter-spacing: 0;
-  text-shadow: 0 18px 46px rgb(0 0 0 / 0.46);
-  margin-bottom: clamp(8px, 1.5vw, 16px);
+  text-shadow: 0 18px 46px rgb(0 0 0 / 0.42);
 }
 
-.englishGroup {
-  gap: 4px;
+.englishName,
+.description {
+  margin: 0;
   color: var(--champion-muted);
+}
+
+.englishName {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 4px;
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 800;
+}
+
+.englishName .actionButton {
+  width: 1.3em;
+  height: 1.3em;
+  padding: 0;
 }
 
 .hoverCardTrigger {
@@ -149,60 +170,13 @@
 .englishHoverCard p {
   color: hsl(var(--muted-foreground));
   font-size: 0.86rem;
-  font-weight: 400;
   line-height: 1.6;
-}
-
-.actionButton {
-  color: var(--champion-muted);
-  background: transparent !important;
-  cursor: pointer;
-  opacity: 0.36;
-  transition: color 150ms ease, opacity 150ms ease, background 150ms ease, filter 150ms ease;
-}
-
-:global(html[data-pointer-active="true"]) .actionButton {
-  opacity: 0.66;
-}
-
-.actionButton:hover,
-.actionButton:focus-visible {
-  color: var(--champion-text);
-  background: rgb(91 208 255 / 0.12) !important;
-  opacity: 1;
-}
-
-.copyText .actionButton,
-.englishGroup .actionButton,
-.description .actionButton {
-  width: 1.2em;
-  height: 1.2em;
-  margin-left: 2px;
-  padding: 0;
-  vertical-align: -0.15em;
-}
-
-.actionButton svg {
-  width: 1em;
-  height: 1em;
-}
-
-.actionButton[aria-label="复制成功"] {
-  color: var(--champion-text);
-  background: rgb(91 208 255 / 0.18) !important;
-  opacity: 1;
 }
 
 .description {
   max-width: 72ch;
-  margin: 0;
-  color: var(--champion-muted);
   font-size: 0.95rem;
-  line-height: 1.62;
-}
-
-.description p {
-  margin: 0;
+  line-height: 1.68;
 }
 
 .heroMeta {
@@ -215,20 +189,51 @@
 .tag {
   display: inline-flex;
   align-items: center;
-  min-height: 30px;
-  padding: 0 10px;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
   color: var(--champion-muted);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 800;
   border: 1px solid var(--champion-border);
-  border-radius: 999px;
+  border-radius: 8px;
   background: var(--champion-panel);
   backdrop-filter: blur(12px);
 }
 
+.tag a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.actionButton {
+  color: var(--champion-muted);
+  background: transparent !important;
+  cursor: pointer;
+  opacity: 0.68;
+}
+
+.actionButton:hover,
+.actionButton:focus-visible,
+.actionButton.active {
+  color: var(--champion-text);
+  background: rgb(91 208 255 / 0.12) !important;
+  opacity: 1;
+}
+
+.description .actionButton,
+.tag .actionButton {
+  width: 1.5em;
+  height: 1.5em;
+  margin-left: 3px;
+  padding: 0;
+  vertical-align: -0.25em;
+}
+
 .divider {
   height: 1px;
-  margin: clamp(16px, 2.5vw, 32px) 0;
+  margin: clamp(18px, 2.5vw, 32px) 0;
   background: linear-gradient(90deg, var(--champion-border), transparent);
 }
 
@@ -237,7 +242,6 @@
   justify-content: space-between;
   gap: 18px;
   align-items: end;
-  margin-top: clamp(5px, 0.9vw, 10px);
 }
 
 .toolbar > span {
@@ -253,23 +257,44 @@
 .sortButton {
   gap: 5px;
   font-weight: 850;
-  text-decoration: none;
 }
 
-.sortButton svg {
-  width: 15px;
-  height: 15px;
+.collectionSection {
+  margin-top: 30px;
+  padding-top: 26px;
+  border-top: 1px solid var(--champion-border);
 }
 
-.sortButton.active {
-  color: var(--champion-text);
+.collectionSection:first-of-type {
+  border-top: 0;
+}
+
+.collectionSection h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.collectionSection h2 a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--champion-muted);
+}
+
+.collectionSectionIcon {
+  width: 1em;
+  height: 1em;
+  flex: none;
 }
 
 .skinList {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: clamp(12px, 1.5vw, 22px);
-  margin-top: 20px;
+  margin-top: 18px;
 }
 
 .skinItem {
@@ -277,15 +302,15 @@
   gap: 12px;
   min-width: 0;
   color: inherit;
-  text-decoration: none;
 }
 
 .skinThumb {
   position: relative;
   display: block;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1;
   overflow: hidden;
   background: var(--champion-panel);
+  backdrop-filter: blur(12px);
 }
 
 .skinThumb::after {
@@ -359,11 +384,6 @@
   white-space: nowrap;
 }
 
-.skinName img {
-  width: 23px;
-  height: 23px;
-}
-
 .empty {
   margin-top: 28px;
   padding: 18px;
@@ -371,78 +391,31 @@
   border: 1px dashed var(--champion-border);
   border-radius: 8px;
   background: var(--champion-panel);
+  backdrop-filter: blur(12px);
 }
 
 @media (max-width: 1160px) {
-  .skinList {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
+  .skinList { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
 
 @media (max-width: 960px) {
-  .skinList {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
+  .skinList { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 @media (max-width: 820px) {
-  .content {
-    width: min(100% - 32px, 1440px);
-    padding-bottom: 48px;
-  }
-
-  .hero {
-    min-height: auto;
-    padding-top: 36px;
-  }
-
-  .titleGroup h1 {
-    font-size: clamp(2.1rem, 10vw, 3.4rem);
-  }
-
-  .toolbar {
-    display: grid;
-    justify-content: stretch;
-  }
-
-  .skinList {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
-    margin-top: 28px;
-  }
+  .content { width: min(100% - 32px, 1440px); padding-bottom: 48px; }
+  .hero { min-height: auto; padding-top: 36px; }
+  .heroCopy h1 { font-size: clamp(2.1rem, 10vw, 3.4rem); }
+  .toolbar { display: grid; justify-content: stretch; }
+  .skinList { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 24px; }
 }
 
 @media (max-width: 520px) {
-  .content {
-    width: min(100% - 20px, 1440px);
-  }
-
-  .titleGroup h1,
-  .englishGroup p {
-    align-items: flex-start;
-  }
-
-  .titleGroup h1 {
-    overflow-wrap: anywhere;
-  }
-
-  .description {
-    font-size: 0.9rem;
-  }
-
-  .copyText .actionButton,
-  .englishGroup .actionButton,
-  .description .actionButton {
-    width: 1.45em;
-    height: 1.45em;
-  }
-
-  .skinList {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  .skinName {
-    font-size: 0.86rem;
-  }
+  .content { width: min(100% - 20px, 1440px); }
+  .heroCopy h1 { overflow-wrap: anywhere; }
+  .description { font-size: 0.9rem; }
+  .skinList { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .skinName { font-size: 0.86rem; }
+  .shell { --champion-scrim: linear-gradient(180deg, rgb(5 11 16 / 0.76), rgb(5 11 16 / 0.92)); }
+  :global(html:not(.dark)) .shell { --champion-scrim: linear-gradient(180deg, rgb(244 248 252 / 0.84), rgb(244 248 252 / 0.96)); }
 }

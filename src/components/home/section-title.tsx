@@ -1,9 +1,14 @@
-﻿import styles from "./section-title.module.css";
+import type { LucideIcon } from "lucide-react";
 
-export function SectionTitle({ title }: { title: string }) {
+import styles from "./section-title.module.css";
+
+export function SectionTitle({ title, icon: Icon }: { title: string; icon?: LucideIcon }) {
   return (
     <div className={styles.root}>
-      <h2 className={styles.title}>{title}</h2>
+      <h2 className={styles.title}>
+        {Icon ? <Icon aria-hidden="true" className={styles.icon} /> : null}
+        {title}
+      </h2>
     </div>
   );
 }

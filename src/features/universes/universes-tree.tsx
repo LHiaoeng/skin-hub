@@ -2,13 +2,17 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { ArrowUpDown, FileDigit } from "lucide-react";
+import { ArrowDownAZ, ArrowDownWideNarrow, ArrowUpAZ, ArrowUpNarrowWide, FileDigit, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tree, TreeFile } from "@/components/ui/file-tree";
+import { getContentSection } from "@/lib/navigation/content-sections";
 import { skinlinePath, universePath } from "@/lib/routing/slug";
 import type { Universe, Skinline } from "@/types/lol";
+
+const UniverseIcon = getContentSection("universes").icon;
+const SkinlineIcon = getContentSection("skinlines").icon;
 
 function parseSkinlineIds(lolSkinlineIdSets?: string): number[] {
   if (!lolSkinlineIdSets) return [];
@@ -68,16 +72,35 @@ export function UniversesTree({ universes, skinlines }: UniversesTreeProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">排序：</span>
-        <ButtonGroup>
-          <Button variant={sortKey === "name" ? "default" : "outline"} size="sm" onClick={() => toggleSort("name")}>
-            <ArrowUpDown className="h-3.5 w-3.5" />
-            名称 {sortKey === "name" && (sortOrder === "asc" ? "↑" : "↓")}
+      <div className="flex items-center">
+        <ButtonGroup aria-label="皮肤宇宙排序">
+          <Button
+            className={sortKey === "name" ? "bg-accent text-accent-foreground" : undefined}
+            variant="outline"
+            size="sm"
+            onClick={() => toggleSort("name")}
+          >
+            <Languages data-icon="inline-start" />
+            名称
+            {sortKey === "name" ? (
+              sortOrder === "asc" ? <ArrowUpAZ data-icon="inline-end" /> : <ArrowDownAZ data-icon="inline-end" />
+            ) : null}
           </Button>
-          <Button variant={sortKey === "skinlineCount" ? "default" : "outline"} size="sm" onClick={() => toggleSort("skinlineCount")}>
-            <FileDigit className="h-3.5 w-3.5" />
-            套装数量 {sortKey === "skinlineCount" && (sortOrder === "asc" ? "↑" : "↓")}
+          <Button
+            className={sortKey === "skinlineCount" ? "bg-accent text-accent-foreground" : undefined}
+            variant="outline"
+            size="sm"
+            onClick={() => toggleSort("skinlineCount")}
+          >
+            <FileDigit data-icon="inline-start" />
+            套装数量
+            {sortKey === "skinlineCount" ? (
+              sortOrder === "asc" ? (
+                <ArrowUpNarrowWide data-icon="inline-end" />
+              ) : (
+                <ArrowDownWideNarrow data-icon="inline-end" />
+              )
+            ) : null}
           </Button>
         </ButtonGroup>
       </div>
@@ -90,8 +113,9 @@ export function UniversesTree({ universes, skinlines }: UniversesTreeProps) {
           return (
             <Card key={universe.lolUniverseId} className="break-inside-avoid mb-4 overflow-hidden">
               <CardHeader className="p-3 pb-0">
-                <CardTitle className="text-sm">
-                  <Link href={universePath(universe)} className="hover:underline">
+                <CardTitle className="text-lg">
+                  <Link href={universePath(universe)} className="inline-flex items-center gap-2 hover:underline">
+                    <UniverseIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
                     {universe.name}
                   </Link>
                 </CardTitle>
@@ -102,8 +126,10 @@ export function UniversesTree({ universes, skinlines }: UniversesTreeProps) {
                     {linkedSkinlines.map((sl) => (
                       <TreeFile
                         key={sl.riotSkinlineId}
+                        icon={SkinlineIcon}
+                        className="text-base"
                         name={
-                          <Link href={skinlinePath(sl)} className="hover:underline text-xs">
+                          <Link href={skinlinePath(sl)} className="hover:underline">
                             {sl.name}
                           </Link>
                         }

@@ -3,20 +3,19 @@
 import {
   ArrowLeft,
   ArrowRight,
-  Box,
+  ChevronDown,
   Download,
   ExternalLink,
   Film,
   Image as ImageIcon,
   Info,
   Maximize2,
-  Mic,
   Minimize2,
-  User,
+  Palette,
   Users,
-  X,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import styles from "@/app/skins/[skinId]/skin-detail-viewer.module.css";
@@ -24,17 +23,34 @@ import { ChromaColorSwatch, normalizeChromaColors } from "@/components/skin/chro
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Carousel, type CarouselApi, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CopyButton } from "@/components/ui/copy-button";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { getContentSection } from "@/lib/navigation/content-sections";
+
+const ChampionIcon = getContentSection("champions").icon;
+const UniverseIcon = getContentSection("universes").icon;
+const SkinlineIcon = getContentSection("skinlines").icon;
 
 export interface SkinVisual {
   id: string;
   name: string;
+  isChroma?: boolean;
   imageUrl?: string;
   focusImageUrl?: string;
   videoUrl?: string;
   focusVideoUrl?: string;
   thumbUrl?: string;
+  chromaImageUrl?: string;
   colors: string[];
   description?: string;
 }
@@ -48,7 +64,6 @@ export interface SkinPanelLink {
 export interface SkinExternalLink {
   label: string;
   href: string;
-  icon: "voice" | "video" | "model";
 }
 
 export interface SkinDetailIcon {
@@ -72,7 +87,6 @@ export interface SkinDetailViewerProps {
   globalRarityName: string;
   rarityIconUrl?: string;
   tags: string[];
-  basicDetails: SkinDetailItem[];
   cnDetails: SkinDetailItem[];
   globalDetails: SkinDetailItem[];
   skinlines: SkinPanelLink[];
@@ -93,7 +107,6 @@ export function SkinDetailViewer({
   rarityName,
   globalRarityName,
   rarityIconUrl,
-  basicDetails,
   cnDetails,
   globalDetails,
   skinlines,
@@ -103,13 +116,16 @@ export function SkinDetailViewer({
   nextSkin,
   visuals,
 }: SkinDetailViewerProps) {
+  const router = useRouter();
   const [selectedVisualId, setSelectedVisualId] = useState(visuals[0]?.id ?? "base");
   const [fitMode, setFitMode] = useState<"contain" | "cover">("contain");
   const [viewMode, setViewMode] = useState<"focus" | "original">("focus");
   const [mediaMode, setMediaMode] = useState<"image" | "video">(() => (getVisualVideoUrl(visuals[0], "focus") ? "video" : "image"));
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [isMobileDetailsDrawer, setIsMobileDetailsDrawer] = useState(false);
   const [areControlsActive, setAreControlsActive] = useState(true);
   const controlsIdleTimerRef = useRef<number | undefined>(undefined);
+  const touchStartRef = useRef<{ x: number; y: number } | undefined>(undefined);
 
   const baseVisual = visuals[0];
   const selectedVisual = visuals.find((visual) => visual.id === selectedVisualId) ?? visuals[0];
@@ -123,6 +139,16 @@ export function SkinDetailViewer({
     ? baseVisual?.focusImageUrl ?? baseVisual?.imageUrl
     : baseVisual?.imageUrl ?? baseVisual?.focusImageUrl;
   const backgroundVideoUrl = mediaMode === "video" ? getVisualVideoUrl(baseVisual, viewMode) : undefined;
+  const chromaVisuals = visuals.filter((visual) => visual.isChroma);
+
+  function handleBack() {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.push("/");
+  }
   const canUseVideo = Boolean(videoUrl);
   const canUseFocusVisual = Boolean(
     (selectedVisual?.focusImageUrl || selectedVisual?.focusVideoUrl) && (selectedVisual?.imageUrl || selectedVisual?.videoUrl),
@@ -136,6 +162,16 @@ export function SkinDetailViewer({
     }
 
     return undefined;
+  }, []);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 760px)");
+    const syncDrawerDirection = () => setIsMobileDetailsDrawer(mediaQuery.matches);
+
+    syncDrawerDirection();
+    mediaQuery.addEventListener("change", syncDrawerDirection);
+
+    return () => mediaQuery.removeEventListener("change", syncDrawerDirection);
   }, []);
 
   useEffect(() => {
@@ -178,6 +214,51 @@ export function SkinDetailViewer({
     setMediaMode(getVisualVideoUrl(nextVisual, viewMode) ? "video" : "image");
   }
 
+  function handleStageTouchStart(event: React.TouchEvent<HTMLElement>) {
+    if (isPanelOpen || event.touches.length !== 1) {
+      touchStartRef.current = undefined;
+      return;
+    }
+
+    const touch = event.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }
+
+  function handleStageTouchEnd(event: React.TouchEvent<HTMLElement>) {
+    const start = touchStartRef.current;
+    touchStartRef.current = undefined;
+
+    if (!start || isPanelOpen || fitMode !== "contain" || !window.matchMedia("(max-width: 760px)").matches) {
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    if (!touch) {
+      return;
+    }
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    const swipeThreshold = 48;
+    const directionRatio = 1.2;
+
+    if (absX >= swipeThreshold && absX > absY * directionRatio) {
+      const targetSkin = deltaX < 0 ? nextSkin : prevSkin;
+      if (targetSkin) router.push(targetSkin.href);
+      return;
+    }
+
+    if (visuals.length <= 1 || absY < swipeThreshold || absY <= absX * directionRatio) {
+      return;
+    }
+
+    const selectedIndex = Math.max(0, visuals.findIndex((visual) => visual.id === selectedVisualId));
+    const direction = deltaY < 0 ? 1 : -1;
+    const nextIndex = (selectedIndex + direction + visuals.length) % visuals.length;
+    handleSelectVisual(visuals[nextIndex].id);
+  }
+
   async function handleDownload() {
     if (!downloadUrl) {
       return;
@@ -213,7 +294,16 @@ export function SkinDetailViewer({
   }
 
   return (
-    <main className={styles.viewer} data-controls-state={areControlsActive ? "active" : "idle"} data-fit-mode={fitMode}>
+    <Drawer
+      direction={isMobileDetailsDrawer ? "bottom" : "right"}
+      open={isPanelOpen}
+      onOpenChange={setIsPanelOpen}
+    >
+      <main
+        className={styles.viewer}
+        data-controls-state={areControlsActive ? "active" : "idle"}
+        data-fit-mode={fitMode}
+      >
       {backgroundVideoUrl ? (
         <video
           aria-hidden
@@ -232,7 +322,15 @@ export function SkinDetailViewer({
       ) : null}
       <div aria-hidden className={styles.shade} />
 
-      <section className={styles.stage} aria-label={`${skinName} 原画查看`}>
+      <section
+        className={styles.stage}
+        aria-label={`${skinName} 原画查看`}
+        onTouchStart={handleStageTouchStart}
+        onTouchEnd={handleStageTouchEnd}
+        onTouchCancel={() => {
+          touchStartRef.current = undefined;
+        }}
+      >
         {mediaMode === "video" && videoUrl ? (
           <video
             className={styles.media}
@@ -259,18 +357,27 @@ export function SkinDetailViewer({
 
       <div className={styles.topbar}>
         <ButtonGroup className={styles.titleActions} aria-label="皮肤信息">
+          <Button
+            className={`${styles.cornerButton} ${styles.iconButton}`}
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleBack}
+            aria-label="返回上一页"
+          >
+            <ArrowLeft aria-hidden />
+          </Button>
           {championHref ? (
             <Button className={`${styles.cornerButton} ${styles.actionButton}`} variant="ghost" size="sm" asChild>
-              <Link href={championHref} aria-label={`返回${championName}详情页`}>
-                <ArrowLeft data-icon="inline-start" aria-hidden />
-                <User data-icon="inline-start" aria-hidden />
+              <Link href={championHref} aria-label={`查看${championName}详情页`}>
+                <ChampionIcon data-icon="inline-start" aria-hidden />
                 <span>{championName}</span>
               </Link>
             </Button>
           ) : (
             <Button className={`${styles.cornerButton} ${styles.actionButton}`} variant="ghost" size="sm" asChild>
               <span aria-label={championName}>
-                <User data-icon="inline-start" aria-hidden />
+                <ChampionIcon data-icon="inline-start" aria-hidden />
                 <span>{championName}</span>
               </span>
             </Button>
@@ -279,7 +386,7 @@ export function SkinDetailViewer({
 
         <ButtonGroup className={styles.controls} aria-label="原画工具">
           <Button
-            className={`${styles.cornerButton} ${styles.iconButton}`}
+            className={`${styles.cornerButton} ${styles.iconButton} ${styles.fitModeButton}`}
             type="button"
             variant="ghost"
             size="sm"
@@ -324,22 +431,24 @@ export function SkinDetailViewer({
           >
             <Download data-icon="inline-start" aria-hidden />
           </Button>
-          <Button
-            className={`${styles.cornerButton} ${styles.actionButton} ${styles.skinTitleButton}`}
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsPanelOpen(true)}
-            title="查看详情"
-            aria-label="查看详情"
-          >
-            {rarityIconUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- Rarity gems are small dictionary assets.
-              <img src={rarityIconUrl} alt="" />
-            ) : null}
-            <span>{selectedVisual?.name ?? skinName}</span>
-            <Info data-icon="inline-start" aria-hidden />
-          </Button>
+          <DrawerTrigger asChild>
+            <Button
+              className={`${styles.cornerButton} ${styles.actionButton} ${styles.skinTitleButton}`}
+              type="button"
+              variant="ghost"
+              size="sm"
+              onMouseEnter={() => setIsPanelOpen(true)}
+              title="查看详情"
+              aria-label="查看详情"
+            >
+              {rarityIconUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- Rarity gems are small dictionary assets.
+                <img src={rarityIconUrl} alt="" />
+              ) : null}
+              <span>{selectedVisual?.name ?? skinName}</span>
+              <Info data-icon="inline-start" aria-hidden />
+            </Button>
+          </DrawerTrigger>
         </ButtonGroup>
       </div>
 
@@ -354,76 +463,94 @@ export function SkinDetailViewer({
         />
       ) : null}
 
-      <aside className={`${styles.panel} ${isPanelOpen ? styles.panelOpen : ""}`} aria-hidden={!isPanelOpen}>
-        <div className={styles.panelHeader}>
+      <DrawerTrigger asChild>
+        <Button
+          className={`${styles.cornerButton} ${styles.mobileSkinTitle}`}
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-label={`查看${selectedVisual?.name ?? skinName}详情`}
+        >
+          {rarityIconUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- Rarity gems are small dictionary assets.
+            <img src={rarityIconUrl} alt="" />
+          ) : null}
+          <span>{selectedVisual?.name ?? skinName}</span>
+          <Info data-icon="inline-end" aria-hidden />
+        </Button>
+      </DrawerTrigger>
+
+      <DrawerContent className={styles.panel}>
+          <DrawerHeader className={styles.panelHeader}>
           <div className={styles.panelTitle}>
             {rarityIconUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- Rarity gems are small dictionary assets.
               <img src={rarityIconUrl} alt={rarityName} title={rarityName} />
             ) : null}
-            <h2>
-              <span>{selectedVisual?.name ?? skinName}</span>
-              <CopyButton value={selectedVisual?.name ?? skinName} />
-            </h2>
+            <DrawerTitle asChild>
+              <h2>
+                <span>
+                  {selectedVisual?.name ?? skinName}
+                  <CopyButton value={selectedVisual?.name ?? skinName} />
+                </span>
+              </h2>
+            </DrawerTitle>
           </div>
-          <ButtonGroup className={styles.panelActions} aria-label="详情操作">
-            <Button className={`${styles.cornerButton} ${styles.iconButton}`} type="button" variant="ghost" size="icon" onClick={() => setIsPanelOpen(false)} aria-label="关闭详情">
-              <X data-icon="inline-start" aria-hidden />
-            </Button>
-          </ButtonGroup>
-        </div>
+          </DrawerHeader>
 
-        <section className={styles.panelDescription}>
-          <p>{description}</p>
-        </section>
+          <DrawerDescription asChild>
+            <div className={styles.panelDescription}>
+              <span>{description}</span>
+              <CopyButton value={description} />
+            </div>
+          </DrawerDescription>
 
-        <section className={styles.panelSection}>
+          <section className={styles.panelSection}>
           <h3>关联内容</h3>
           <div className={styles.panelLinks}>
             {championHref ? (
               <Link className={styles.panelLink} href={championHref}>
+                <ChampionIcon aria-hidden />
                 <span>{championName}</span>
-                <User size={16} aria-hidden />
               </Link>
             ) : null}
             {universes.map((universe) => (
               <Link className={styles.panelLink} href={universe.href} key={universe.href}>
+                <UniverseIcon aria-hidden />
                 <span>{universe.label}</span>
-                <span>{universe.meta}</span>
               </Link>
             ))}
             {skinlines.map((skinline) => (
               <Link className={styles.panelLink} href={skinline.href} key={skinline.href}>
+                <SkinlineIcon aria-hidden />
                 <span>{skinline.label}</span>
-                <span>{skinline.meta}</span>
               </Link>
             ))}
           </div>
-        </section>
+          </section>
 
-        <DetailSection title="基本信息" items={basicDetails} />
-        <DetailSection title="国服" items={cnDetails} />
-        <DetailSection title="直营服" items={globalDetails} />
-
-        {externalLinks.length ? (
           <section className={styles.panelSection}>
+            <h3>基本信息</h3>
+            <DetailCollapsible defaultOpen items={cnDetails} title="国服" />
+            <DetailCollapsible items={globalDetails} title="直营服" />
+          </section>
+
+          <ChromaCollapsible visuals={chromaVisuals} />
+
+          {externalLinks.length ? (
+            <section className={styles.panelSection}>
             <h3>外部资源</h3>
             <div className={styles.externalLinks}>
               {externalLinks.map((link) => (
                 <a className={styles.externalLink} href={link.href} key={link.href} target="_blank" rel="noreferrer">
                   <span>{link.label}</span>
-                  <span>
-                    {link.icon === "voice" ? <Mic size={16} aria-hidden /> : null}
-                    {link.icon === "video" ? <Film size={16} aria-hidden /> : null}
-                    {link.icon === "model" ? <Box size={16} aria-hidden /> : null}
-                    <ExternalLink size={16} aria-hidden />
-                  </span>
+                  <ExternalLink aria-hidden />
                 </a>
               ))}
             </div>
-          </section>
-        ) : null}
-      </aside>
+            </section>
+          ) : null}
+      </DrawerContent>
 
       <section className={styles.hiddenSeo} aria-label="皮肤详情正文">
         <h2>{skinName}</h2>
@@ -432,7 +559,8 @@ export function SkinDetailViewer({
           {championName}，{rarityName}，{globalRarityName}
         </p>
       </section>
-    </main>
+      </main>
+    </Drawer>
   );
 }
 
@@ -743,29 +871,100 @@ function ChromaThumb({
   );
 }
 
-function DetailSection({ title, items }: { title: string; items: SkinDetailItem[] }) {
+function DetailCollapsible({
+  defaultOpen = false,
+  items,
+  title,
+}: {
+  defaultOpen?: boolean;
+  items: SkinDetailItem[];
+  title: string;
+}) {
   return (
-    <section className={styles.panelSection}>
-      <h3>{title}</h3>
-      <dl className={styles.definitionList}>
-        {items.map((item) => (
-          <div key={item.label}>
-            <dt>{item.label}</dt>
-            <dd>
-              {item.icons ? (
-                <span className={styles.detailIcons}>
-                  {item.icons.map((icon) =>
-                    icon.iconUrl ? <DetailIcon icon={icon} key={`${icon.name}-${icon.iconUrl}`} /> : null,
-                  )}
-                </span>
-              ) : (
-                item.value ?? ""
-              )}
-            </dd>
+    <Collapsible className={styles.detailCollapsible} defaultOpen={defaultOpen}>
+      <CollapsibleTrigger asChild>
+        <Button className={styles.collapsibleTrigger} type="button" variant="ghost">
+          <span>{title}</span>
+          <ChevronDown data-icon="inline-end" aria-hidden />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className={styles.collapsibleContent}>
+        <DetailList items={items} />
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+function DetailList({ items }: { items: SkinDetailItem[] }) {
+  return (
+    <dl className={styles.definitionList}>
+      {items.map((item) => (
+        <div key={item.label}>
+          <dt>{item.label}</dt>
+          <dd>
+            {item.icons ? (
+              <span className={styles.detailIcons}>
+                {item.icons.map((icon) =>
+                  icon.iconUrl ? <DetailIcon icon={icon} key={`${icon.name}-${icon.iconUrl}`} /> : null,
+                )}
+              </span>
+            ) : (
+              item.value ?? ""
+            )}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function ChromaCollapsible({ visuals }: { visuals: SkinVisual[] }) {
+  return (
+    <Collapsible className={styles.detailCollapsible}>
+      <CollapsibleTrigger asChild>
+        <Button className={styles.collapsibleTrigger} type="button" variant="ghost">
+          <span className={styles.collapsibleLabel}>
+            <Palette data-icon="inline-start" aria-hidden />
+            <span>{visuals.length}个炫彩外观</span>
+          </span>
+          <ChevronDown data-icon="inline-end" aria-hidden />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className={styles.collapsibleContent}>
+        {visuals.length ? (
+          <div className={styles.drawerChromaList}>
+            {visuals.map((visual) => (
+              <HoverCard closeDelay={80} key={visual.id} openDelay={120}>
+                <HoverCardTrigger asChild>
+                  <div className={styles.drawerChromaItem} tabIndex={0}>
+                    {visual.chromaImageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- Drawer chroma tiles must use the source chromaPath without fallback.
+                      <img className={styles.drawerChromaImage} src={visual.chromaImageUrl} alt={visual.name} />
+                    ) : (
+                      <div className={styles.drawerChromaImageMissing} aria-label={`${visual.name}无炫彩图片`} />
+                    )}
+                  </div>
+                </HoverCardTrigger>
+                <HoverCardContent className={styles.drawerChromaHoverCard} align="center" side="left">
+                  <div className={styles.drawerChromaHoverContent}>
+                    <ChromaColorSwatch
+                      colors={normalizeChromaColors(visual.colors)}
+                      interactive={false}
+                      label={`${visual.name} 炫彩颜色`}
+                      size={18}
+                      stopPropagation={false}
+                    />
+                    <span>{visual.name}</span>
+                  </div>
+                </HoverCardContent>
+              </HoverCard>
+            ))}
           </div>
-        ))}
-      </dl>
-    </section>
+        ) : (
+          <p className={styles.emptyChromaText}>暂无炫彩外观</p>
+        )}
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 

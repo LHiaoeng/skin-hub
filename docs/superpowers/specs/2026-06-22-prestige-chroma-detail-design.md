@@ -14,7 +14,7 @@
 
 ## 数据契约
 
-臻彩身份只能由 `GET /rest/lol/prestige-chromas` 确定，不根据名称推断。页面使用以下字段：
+臻彩详情页使用 `GET /rest/lol/prestige-chromas` 返回的 `skinId` 作为页面 ID；后端生成该接口前必须先修正源头重复 ID。若同一 `skinId` 对应不同 `itemName`，后端通过 `/latest/plugins/rcp-be-lol-game-data/global/zh_cn/v1/champions/{heroId}.json` 的 `skins[*].chromas[*]` 回查，优先按 `instanceId`、其次按名称匹配，并以 `chromas[*].id` 作为权威臻彩 ID。页面使用以下字段：
 
 - 身份与排序：`skinId`、`instanceId`、`rank`
 - 展示：`itemName`、`cid`、`cname`、`timgUrl`

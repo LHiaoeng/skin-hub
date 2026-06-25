@@ -783,9 +783,11 @@ BACKEND_BASE_URL=http://localhost:9527
 
 ### 27.2 数据与唯一性
 
-- 臻彩身份的唯一事实源为 `GET /rest/lol/prestige-chromas`，禁止通过名称包含“臻彩”等文本规则推断。
+- 臻彩详情页消费 `GET /rest/lol/prestige-chromas` 返回的 `skinId` 作为页面 ID；后端生成该接口前必须保证 `skinId` 已修正为真实臻彩 ID。
+- 如果 `/rest/lol/prestige-chromas` 的源头数据出现同一 `skinId` 对应不同 `itemName`，后端不能按 ID 数学规律推断，必须通过 `/latest/plugins/rcp-be-lol-game-data/global/zh_cn/v1/champions/{heroId}.json` 回查 `skins[*].chromas[*]`，优先按 `instanceId`、其次按名称匹配，并以 `chromas[*].id` 修正 `skinId`。
+- `skins[*].chromas[*].id` 是臻彩 ID 修正流程的权威事实源；找不到唯一匹配时必须暴露数据异常，不随机选取、不静默去重。
 - 前端至少使用 `heroId`、`heroName`、`skinId`、`itemName`、`instanceId`、`rank`、`startTime`、`startDate`、`cid`、`cname`、`timgUrl`、`skinLines` 和 `universes` 字段。
-- 接口成功但找不到对应 `skinId` 时返回 404；同一 `skinId` 返回多条记录时视为数据契约错误，不随机选取、不静默去重。
+- 接口成功但找不到对应 `skinId` 时返回 404；同一 `skinId` 返回多条不同 `itemName` 记录时视为后端数据修正未完成，前端不得再进行业务修正。
 - 接口失败时明确暴露请求失败，不伪装成 404，也不回退为普通皮肤或普通炫彩页面。
 
 ### 27.3 首屏与详情内容

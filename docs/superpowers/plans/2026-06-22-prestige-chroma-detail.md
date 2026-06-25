@@ -4,7 +4,7 @@
 
 **Goal:** 新增可索引的臻彩独立详情页，复用现有全屏皮肤查看器，并完成稳定路由、SEO、结构化数据、sitemap 和验证。
 
-**Architecture:** `/rest/lol/prestige-chromas` 是臻彩身份唯一事实源；纯数据校验、唯一匹配、排序和文案组合放入独立领域模块。Next.js 动态路由在服务端完成实体解析、规范 slug 跳转和 SEO 输出，现有 `SkinDetailViewer` 只做必要的内容标签与详情分组通用化，皮肤详情默认行为保持不变。
+**Architecture:** `/rest/lol/prestige-chromas` 是前端消费的臻彩身份来源；后端生成该接口前必须保证 `skinId` 已按 Riot 客户端 game-data 的 `skins[*].chromas[*].id` 修正。纯数据校验、唯一匹配、排序和文案组合放入独立领域模块。Next.js 动态路由在服务端完成实体解析、规范 slug 跳转和 SEO 输出，现有 `SkinDetailViewer` 只做必要的内容标签与详情分组通用化，皮肤详情默认行为保持不变。
 
 **Tech Stack:** Next.js 16 App Router、React 19、TypeScript strict、Node test runner、shadcn/Radix Drawer、Schema.org JSON-LD。
 

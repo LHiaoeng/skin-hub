@@ -653,17 +653,13 @@ test("rejects duplicate skinIds while resolving a route", () => {
   );
 });
 
-test("resolves duplicate skinIds by the full prestige chroma slug", () => {
+test("rejects duplicate skinIds even when the full prestige chroma slug is unique", () => {
   const first = { ...validItem, skinId: 25073, itemName: "Blue Morgana" };
   const second = { ...validItem, skinId: 25073, itemName: "Gold Morgana" };
 
-  assert.deepEqual(
-    resolvePrestigeChromaRoute([first, second], "25073-gold-morgana")?.item,
-    second,
-  );
-  assert.equal(
-    resolvePrestigeChromaRoute([first, second], "25073-wrong-slug"),
-    undefined,
+  assert.throws(
+    () => resolvePrestigeChromaRoute([first, second], "25073-gold-morgana"),
+    /Duplicate prestige chroma skinId 25073/,
   );
 });
 
@@ -698,7 +694,7 @@ test("selects adjacent prestige chromas by rank and skinId identity", () => {
   });
 });
 
-test("selects adjacent prestige chromas when skinIds are duplicated", () => {
+test("rejects adjacent prestige chroma navigation when skinIds are duplicated", () => {
   const first = {
     ...validItem,
     skinId: 25073,
@@ -718,12 +714,9 @@ test("selects adjacent prestige chromas when skinIds are duplicated", () => {
     itemName: "Green Morgana",
   };
 
-  assert.deepEqual(
-    getPrestigeChromaNavigation([next, first, current], current),
-    {
-      previousItem: first,
-      nextItem: next,
-    },
+  assert.throws(
+    () => getPrestigeChromaNavigation([next, first, current], current),
+    /Duplicate prestige chroma skinId 25073/,
   );
 });
 

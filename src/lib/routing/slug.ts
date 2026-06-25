@@ -56,26 +56,6 @@ export function resolvePrestigeChromaRoute(
 
   const matches = items.filter((item) => item.skinId === skinId);
   if (matches.length > 1) {
-    const exactMatches = matches.filter(
-      (item) => decodedSegment === prestigeChromaSegment(item),
-    );
-    if (exactMatches.length === 1) {
-      const [item] = exactMatches;
-      return {
-        item,
-        canonicalPath: prestigeChromaPath(item),
-        shouldRedirect: false,
-      };
-    }
-
-    const canonicalSegments = new Set(matches.map(prestigeChromaSegment));
-    if (
-      exactMatches.length === 0 &&
-      canonicalSegments.size === matches.length
-    ) {
-      return undefined;
-    }
-
     throw new Error(`Duplicate prestige chroma skinId ${skinId}`);
   }
   const item = matches[0];

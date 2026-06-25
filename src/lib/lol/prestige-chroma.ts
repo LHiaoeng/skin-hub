@@ -427,12 +427,10 @@ export function getPrestigeChromaNavigation(
   previousItem: PrestigeChroma | undefined;
   nextItem: PrestigeChroma | undefined;
 } {
+  resolvePrestigeChroma(items, currentItem.skinId);
   const sortedItems = sortPrestigeChromas(items);
   const currentIndex = sortedItems.findIndex(
-    (item) =>
-      item.skinId === currentItem.skinId &&
-      getPrestigeChromaRouteKey(item) ===
-        getPrestigeChromaRouteKey(currentItem),
+    (item) => item.skinId === currentItem.skinId,
   );
 
   return {
@@ -442,10 +440,6 @@ export function getPrestigeChromaNavigation(
         ? sortedItems[currentIndex + 1]
         : undefined,
   };
-}
-
-function getPrestigeChromaRouteKey(item: PrestigeChroma): string {
-  return `${item.skinId}:${item.itemName.normalize("NFC").trim().toLowerCase()}`;
 }
 
 export function buildPrestigeChromaDescription(item: PrestigeChroma): string {

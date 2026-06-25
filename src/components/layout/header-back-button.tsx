@@ -18,7 +18,13 @@ export function HeaderBackButton() {
   }
 
   return (
-    <Button type="button" variant="ghost" size="icon" onClick={handleBack} aria-label="返回上一页">
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      onClick={handleBack}
+      aria-label="返回上一页"
+    >
       <ArrowLeft aria-hidden="true" />
     </Button>
   );

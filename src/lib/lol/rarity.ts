@@ -1,9 +1,18 @@
 import { normalizeImageUrl } from "@/lib/images/cdn";
-import type { SkinDictDisplayItem, SkinDictItem, SkinDictValue } from "@/types/lol";
+import type {
+  SkinDictDisplayItem,
+  SkinDictItem,
+  SkinDictValue,
+} from "@/types/lol";
 
-export type { SkinDictDisplayItem, SkinDictItem, SkinDictValue } from "@/types/lol";
+export type {
+  SkinDictDisplayItem,
+  SkinDictItem,
+  SkinDictValue,
+} from "@/types/lol";
 
-const RARITY_GEM_BASE_PATH = "plugins/rcp-be-lol-game-data/global/default/v1/rarity-gem-icons";
+const RARITY_GEM_BASE_PATH =
+  "plugins/rcp-be-lol-game-data/global/default/v1/rarity-gem-icons";
 
 const CN_RARITY_NAMES: Record<string, string> = {
   "0": "其他",
@@ -31,7 +40,14 @@ const GLOBAL_RARITY_NAMES: Record<string, string> = {
   kultimate: "Ultimate",
 };
 
-const GLOBAL_RARITY_ICON_NAMES = new Set(["epic", "exalted", "legendary", "mythic", "transcendent", "ultimate"]);
+const GLOBAL_RARITY_ICON_NAMES = new Set([
+  "epic",
+  "exalted",
+  "legendary",
+  "mythic",
+  "transcendent",
+  "ultimate",
+]);
 
 function toKey(value: SkinDictValue | null | undefined) {
   if (value === undefined || value === null) {
@@ -55,7 +71,10 @@ function asStringArray(value: unknown) {
   }
 
   return value
-    .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    .filter(
+      (item): item is string =>
+        typeof item === "string" && item.trim().length > 0,
+    )
     .map((item) => item.trim());
 }
 
@@ -68,17 +87,22 @@ function normalizeEmblemValues(values?: string | string[] | null) {
     return values.map((item) => item.trim()).filter(Boolean);
   }
 
-  return values
-    ?.split(/[,;|]/)
-    .map((item) => item.trim())
-    .filter(Boolean) ?? [];
+  return (
+    values
+      ?.split(/[,;|]/)
+      .map((item) => item.trim())
+      .filter(Boolean) ?? []
+  );
 }
 
 function getDictItemName(item: SkinDictItem | undefined, fallback: string) {
   return item?.name?.trim() || item?.label?.trim() || fallback;
 }
 
-export function findSkinDictItem(items: SkinDictItem[] | undefined, value: SkinDictValue | null | undefined) {
+export function findSkinDictItem(
+  items: SkinDictItem[] | undefined,
+  value: SkinDictValue | null | undefined,
+) {
   const key = toComparableKey(value);
   if (!items?.length || !key) {
     return undefined;
@@ -87,13 +111,19 @@ export function findSkinDictItem(items: SkinDictItem[] | undefined, value: SkinD
   return items.find((item) => toComparableKey(item.value) === key);
 }
 
-export function getCnRarityName(regionRarityId: SkinDictValue | null | undefined, dictItems?: SkinDictItem[]) {
+export function getCnRarityName(
+  regionRarityId: SkinDictValue | null | undefined,
+  dictItems?: SkinDictItem[],
+) {
   const key = toKey(regionRarityId);
   if (!key) {
     return "国服稀有度";
   }
 
-  return getDictItemName(findSkinDictItem(dictItems, key), CN_RARITY_NAMES[key] ?? key);
+  return getDictItemName(
+    findSkinDictItem(dictItems, key),
+    CN_RARITY_NAMES[key] ?? key,
+  );
 }
 
 export function getCnRarityIconPath(
@@ -126,10 +156,16 @@ export function getCnRarityIconUrl(
   isPbeOnly?: number | boolean,
   dictItems?: SkinDictItem[],
 ) {
-  return normalizeImageUrl(getCnRarityIconPath(regionRarityId, rarityGemPath, dictItems), isPbeOnly);
+  return normalizeImageUrl(
+    getCnRarityIconPath(regionRarityId, rarityGemPath, dictItems),
+    isPbeOnly,
+  );
 }
 
-export function getCnRarityIconPathFromDict(dictItems: SkinDictItem[] | undefined, regionRarityId: SkinDictValue) {
+export function getCnRarityIconPathFromDict(
+  dictItems: SkinDictItem[] | undefined,
+  regionRarityId: SkinDictValue,
+) {
   const rarityId = toKey(regionRarityId);
   const item = findSkinDictItem(dictItems, rarityId);
   const paths = asStringArray(item?.attributes?.gemIconUrls);
@@ -143,19 +179,30 @@ export function getCnRarityIconPathFromDict(dictItems: SkinDictItem[] | undefine
   }
 
   const preferredFileName = `cn-gem-${rarityId}.png`;
-  return paths.find((path) => fileNameOf(path) === preferredFileName) ?? paths[0];
+  return (
+    paths.find((path) => fileNameOf(path) === preferredFileName) ?? paths[0]
+  );
 }
 
-export function getGlobalRarityName(rarity: SkinDictValue | null | undefined, dictItems?: SkinDictItem[]) {
+export function getGlobalRarityName(
+  rarity: SkinDictValue | null | undefined,
+  dictItems?: SkinDictItem[],
+) {
   const key = toKey(rarity);
   if (!key) {
     return "直营服稀有度";
   }
 
-  return getDictItemName(findSkinDictItem(dictItems, key), GLOBAL_RARITY_NAMES[key.toLowerCase()] ?? key);
+  return getDictItemName(
+    findSkinDictItem(dictItems, key),
+    GLOBAL_RARITY_NAMES[key.toLowerCase()] ?? key,
+  );
 }
 
-export function getGlobalRarityIconPath(rarity: SkinDictValue | null | undefined, dictItems?: SkinDictItem[]) {
+export function getGlobalRarityIconPath(
+  rarity: SkinDictValue | null | undefined,
+  dictItems?: SkinDictItem[],
+) {
   const dictIconPath = getGlobalRarityIconPathFromDict(dictItems, rarity);
   if (dictIconPath) {
     return dictIconPath;
@@ -174,10 +221,16 @@ export function getGlobalRarityIconUrl(
   isPbeOnly?: number | boolean,
   dictItems?: SkinDictItem[],
 ) {
-  return normalizeImageUrl(getGlobalRarityIconPath(rarity, dictItems), isPbeOnly);
+  return normalizeImageUrl(
+    getGlobalRarityIconPath(rarity, dictItems),
+    isPbeOnly,
+  );
 }
 
-export function getGlobalRarityIconPathFromDict(dictItems: SkinDictItem[] | undefined, rarity: SkinDictValue | null | undefined) {
+export function getGlobalRarityIconPathFromDict(
+  dictItems: SkinDictItem[] | undefined,
+  rarity: SkinDictValue | null | undefined,
+) {
   const item = findSkinDictItem(dictItems, rarity);
   const iconUrls = asStringArray(item?.attributes?.gemIconUrls);
 
@@ -185,7 +238,11 @@ export function getGlobalRarityIconPathFromDict(dictItems: SkinDictItem[] | unde
     return iconUrls[0];
   }
 
-  return asString(item?.attributes?.iconUrl) ?? asString(item?.attributes?.large) ?? asString(item?.attributes?.small);
+  return (
+    asString(item?.attributes?.iconUrl) ??
+    asString(item?.attributes?.large) ??
+    asString(item?.attributes?.small)
+  );
 }
 
 export function getEmblemDisplayItems(

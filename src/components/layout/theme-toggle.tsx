@@ -15,7 +15,8 @@ export function ThemeToggle() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  const label = theme === "system" ? "系统" : resolvedTheme === "dark" ? "暗色" : "亮色";
+  const label =
+    theme === "system" ? "系统" : resolvedTheme === "dark" ? "暗色" : "亮色";
 
   function cycleTheme() {
     if (theme === "dark") {
@@ -41,9 +42,15 @@ export function ThemeToggle() {
       title={`当前：${mounted ? label : "暗色"}`}
     >
       {!mounted ? <Moon className="h-4 w-4" aria-hidden="true" /> : null}
-      {mounted && theme === "system" ? <Monitor className="h-4 w-4" aria-hidden="true" /> : null}
-      {mounted && theme !== "system" && resolvedTheme === "dark" ? <Moon className="h-4 w-4" aria-hidden="true" /> : null}
-      {mounted && theme !== "system" && resolvedTheme === "light" ? <Sun className="h-4 w-4" aria-hidden="true" /> : null}
+      {mounted && theme === "system" ? (
+        <Monitor className="h-4 w-4" aria-hidden="true" />
+      ) : null}
+      {mounted && theme !== "system" && resolvedTheme === "dark" ? (
+        <Moon className="h-4 w-4" aria-hidden="true" />
+      ) : null}
+      {mounted && theme !== "system" && resolvedTheme === "light" ? (
+        <Sun className="h-4 w-4" aria-hidden="true" />
+      ) : null}
     </Button>
   );
 }

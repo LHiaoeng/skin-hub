@@ -10,8 +10,17 @@ import { SkinEmblems } from "@/components/skin/skin-emblems";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { CopyButton } from "@/components/ui/copy-button";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { getChampion, getChampionSkins, getChampions, getLolDictionaries } from "@/lib/api/backend-client";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
+  getChampion,
+  getChampionSkins,
+  getChampions,
+  getLolDictionaries,
+} from "@/lib/api/backend-client";
 import { normalizeImageUrl } from "@/lib/images/cdn";
 import { getContentSection } from "@/lib/navigation/content-sections";
 import { championPath, parseRouteId, skinPath } from "@/lib/routing/slug";
@@ -47,7 +56,9 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({ params }: ChampionDetailPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: ChampionDetailPageProps): Promise<Metadata> {
   const { championId } = await params;
   const champion = await getChampion(parseRouteId(championId));
 
@@ -59,8 +70,13 @@ export async function generateMetadata({ params }: ChampionDetailPageProps): Pro
 
   const skins = await getChampionSkins(champion.heroId);
   const baseSkin = findBaseSkin(skins);
-  const imageUrl = normalizeImageUrl(baseSkin?.splashPath ?? champion.squarePortraitPath, baseSkin?.isPbeOnly);
-  const description = champion.description ?? `${champion.name} 的国服英雄资料、英雄称号、背景描述和皮肤列表。`;
+  const imageUrl = normalizeImageUrl(
+    baseSkin?.splashPath ?? champion.squarePortraitPath,
+    baseSkin?.isPbeOnly,
+  );
+  const description =
+    champion.description ??
+    `${champion.name} 的国服英雄资料、英雄称号、背景描述和皮肤列表。`;
 
   return {
     title: `${champion.title ?? champion.name} - ${champion.name} 英雄资料`,
@@ -71,17 +87,26 @@ export async function generateMetadata({ params }: ChampionDetailPageProps): Pro
     openGraph: {
       title: `${champion.name} 英雄资料`,
       description,
-      images: imageUrl ? [{ url: imageUrl, alt: `${champion.name} 英雄皮肤背景图` }] : undefined,
+      images: imageUrl
+        ? [{ url: imageUrl, alt: `${champion.name} 英雄皮肤背景图` }]
+        : undefined,
     },
   };
 }
 
-export default async function ChampionDetailPage({ params, searchParams }: ChampionDetailPageProps) {
+export default async function ChampionDetailPage({
+  params,
+  searchParams,
+}: ChampionDetailPageProps) {
   const { championId } = await params;
   const resolvedSearchParams = await searchParams;
   const sort = getSortValue(resolvedSearchParams);
   const heroId = parseRouteId(championId);
-  const [champion, skins, dictionaries] = await Promise.all([getChampion(heroId), getChampionSkins(heroId), getLolDictionaries()]);
+  const [champion, skins, dictionaries] = await Promise.all([
+    getChampion(heroId),
+    getChampionSkins(heroId),
+    getLolDictionaries(),
+  ]);
 
   if (!champion) {
     notFound();
@@ -98,12 +123,18 @@ export default async function ChampionDetailPage({ params, searchParams }: Champ
   const zhTitle = champion.title ?? "称号未提供";
   const enName = champion.nameEng ?? "English name unavailable";
   const enTitle = champion.titleEng ?? "English title unavailable";
-  const description = champion.description ?? "后端暂未提供该英雄的中文背景描述。";
+  const description =
+    champion.description ?? "后端暂未提供该英雄的中文背景描述。";
   const englishDescription = champion.engDescription;
   const fullChineseName = `${zhTitle} ${champion.name}`;
   const fullEnglishName = `${enTitle} ${enName}`;
-  const roleLabels = splitCsv(champion.roles).map((role) => getDictText(dictionaries.championRoles, role));
-  const positionLabels = champion.positions?.map((position) => getDictText(dictionaries.championPositions, position)) ?? [];
+  const roleLabels = splitCsv(champion.roles).map((role) =>
+    getDictText(dictionaries.championRoles, role),
+  );
+  const positionLabels =
+    champion.positions?.map((position) =>
+      getDictText(dictionaries.championPositions, position),
+    ) ?? [];
   const championSection = getContentSection("champions");
   const ChampionIcon = championSection.icon;
 
@@ -140,14 +171,23 @@ export default async function ChampionDetailPage({ params, searchParams }: Champ
           </Link>
           <span>/</span>
           <Link href={championSection.href}>
-            <ChampionIcon aria-hidden="true" className={styles.navigationIcon} />
+            <ChampionIcon
+              aria-hidden="true"
+              className={styles.navigationIcon}
+            />
             {championSection.label}
           </Link>
           <span>/</span>
           <span className={styles.copyText}>
-            <ChampionIcon aria-hidden="true" className={styles.navigationIcon} />
+            <ChampionIcon
+              aria-hidden="true"
+              className={styles.navigationIcon}
+            />
             {fullChineseName}
-            <CopyButton className={styles.actionButton} value={fullChineseName} />
+            <CopyButton
+              className={styles.actionButton}
+              value={fullChineseName}
+            />
           </span>
         </nav>
 
@@ -164,10 +204,16 @@ export default async function ChampionDetailPage({ params, searchParams }: Champ
                   <HoverCardTrigger asChild>
                     <p className={styles.hoverCardTrigger}>
                       <span>{fullEnglishName}</span>
-                      <CopyButton className={styles.actionButton} value={fullEnglishName} />
+                      <CopyButton
+                        className={styles.actionButton}
+                        value={fullEnglishName}
+                      />
                     </p>
                   </HoverCardTrigger>
-                  <HoverCardContent align="start" className={styles.englishHoverCard}>
+                  <HoverCardContent
+                    align="start"
+                    className={styles.englishHoverCard}
+                  >
                     <strong>{fullEnglishName}</strong>
                     <p>{englishDescription}</p>
                   </HoverCardContent>
@@ -175,14 +221,20 @@ export default async function ChampionDetailPage({ params, searchParams }: Champ
               ) : (
                 <p>
                   <span>{fullEnglishName}</span>
-                  <CopyButton className={styles.actionButton} value={fullEnglishName} />
+                  <CopyButton
+                    className={styles.actionButton}
+                    value={fullEnglishName}
+                  />
                 </p>
               )}
             </div>
             <div className={styles.description}>
               <p>
                 {description}
-                <CopyButton className={styles.actionButton} value={description} />
+                <CopyButton
+                  className={styles.actionButton}
+                  value={description}
+                />
               </p>
             </div>
             <div className={styles.heroMeta}>
@@ -215,7 +267,10 @@ export default async function ChampionDetailPage({ params, searchParams }: Champ
         </div>
 
         {sortedSkins.length > 0 ? (
-          <section className={styles.skinList} aria-label={`${champion.name} 皮肤列表`}>
+          <section
+            className={styles.skinList}
+            aria-label={`${champion.name} 皮肤列表`}
+          >
             {sortedSkins.map((skin, index) => (
               <SkinTile
                 skin={skin}
@@ -227,7 +282,9 @@ export default async function ChampionDetailPage({ params, searchParams }: Champ
             ))}
           </section>
         ) : (
-          <section className={styles.empty}>公开接口暂未返回该英雄皮肤数据。</section>
+          <section className={styles.empty}>
+            公开接口暂未返回该英雄皮肤数据。
+          </section>
         )}
       </article>
     </main>
@@ -245,13 +302,22 @@ function SkinTile({
   emblemDictItems: SkinDictItem[];
   rarityDictItems: SkinDictItem[];
 }) {
-  const imageUrl = normalizeImageUrl(skin.tilePath ?? skin.loadScreenPath ?? skin.splashPath, skin.isPbeOnly);
+  const imageUrl = normalizeImageUrl(
+    skin.tilePath ?? skin.loadScreenPath ?? skin.splashPath,
+    skin.isPbeOnly,
+  );
 
   return (
     <Link className={styles.skinItem} href={skinPath(skin)} title={skin.name}>
       <span className={styles.skinThumb}>
         {imageUrl ? (
-          <Image src={imageUrl} alt={`${skin.name} 皮肤卡片图`} fill priority={priority} sizes="(max-width: 720px) 46vw, 280px" />
+          <Image
+            src={imageUrl}
+            alt={`${skin.name} 皮肤卡片图`}
+            fill
+            priority={priority}
+            sizes="(max-width: 720px) 46vw, 280px"
+          />
         ) : (
           <span className={styles.imagePlaceholder}>No image</span>
         )}
@@ -295,14 +361,20 @@ function SortLink({
   return (
     <Button
       asChild
-      className={[styles.actionButton, styles.sortButton, field === activeSort.field ? styles.active : ""]
+      className={[
+        styles.actionButton,
+        styles.sortButton,
+        field === activeSort.field ? styles.active : "",
+      ]
         .filter(Boolean)
         .join(" ")}
       variant="outline"
     >
       <Link href={href}>
         {children}
-        {field === activeSort.field ? <SortIcon order={activeSort.order} /> : null}
+        {field === activeSort.field ? (
+          <SortIcon order={activeSort.order} />
+        ) : null}
       </Link>
     </Button>
   );
@@ -317,11 +389,20 @@ function getNextSortOrder(field: SortField, activeSort: SkinSort): SortOrder {
 }
 
 function SortIcon({ order }: { order: SortOrder }) {
-  return order === "asc" ? <ArrowUp aria-hidden="true" /> : <ArrowDown aria-hidden="true" />;
+  return order === "asc" ? (
+    <ArrowUp aria-hidden="true" />
+  ) : (
+    <ArrowDown aria-hidden="true" />
+  );
 }
 
-function getSortValue(searchParams: { sort?: string | string[]; order?: string | string[] } | undefined): SkinSort {
-  const field = getFirstParam(searchParams?.sort) === "rarity" ? "rarity" : "release";
+function getSortValue(
+  searchParams:
+    | { sort?: string | string[]; order?: string | string[] }
+    | undefined,
+): SkinSort {
+  const field =
+    getFirstParam(searchParams?.sort) === "rarity" ? "rarity" : "release";
   const order = getFirstParam(searchParams?.order) === "desc" ? "desc" : "asc";
 
   return { field, order };
@@ -332,21 +413,35 @@ function sortSkins(skins: Skin[], sort: SkinSort) {
     const direction = sort.order === "asc" ? 1 : -1;
 
     if (sort.field === "rarity") {
-      return (getRarityValue(left) - getRarityValue(right) || left.riotSkinId - right.riotSkinId) * direction;
+      return (
+        (getRarityValue(left) - getRarityValue(right) ||
+          left.riotSkinId - right.riotSkinId) * direction
+      );
     }
 
     const leftTime = Date.parse(left.releaseTime ?? "") || left.riotSkinId;
     const rightTime = Date.parse(right.releaseTime ?? "") || right.riotSkinId;
-    return (leftTime - rightTime || left.riotSkinId - right.riotSkinId) * direction;
+    return (
+      (leftTime - rightTime || left.riotSkinId - right.riotSkinId) * direction
+    );
   });
 }
 
 function findBaseSkin(skins: Skin[]) {
-  return skins.find((skin) => skin.isBase === 1) ?? skins.find((skin) => skin.name === skin.championName) ?? skins[0];
+  return (
+    skins.find((skin) => skin.isBase === 1) ??
+    skins.find((skin) => skin.name === skin.championName) ??
+    skins[0]
+  );
 }
 
 function splitCsv(value: string | undefined) {
-  return value?.split(",").map((item) => item.trim()).filter(Boolean) ?? [];
+  return (
+    value
+      ?.split(",")
+      .map((item) => item.trim())
+      .filter(Boolean) ?? []
+  );
 }
 
 function getFirstParam(value: string | string[] | undefined) {
@@ -363,11 +458,17 @@ function getRarityValue(skin: Skin) {
 }
 
 function getDictText(items: SkinDictItem[], value: string) {
-  const item = items.find((dictItem) => String(dictItem.value).toLowerCase() === value.toLowerCase());
+  const item = items.find(
+    (dictItem) => String(dictItem.value).toLowerCase() === value.toLowerCase(),
+  );
   return item?.name?.trim() || item?.label?.trim() || value;
 }
 
-function championSchema(champion: Champion, pageUrl: string, imageUrl: string | undefined) {
+function championSchema(
+  champion: Champion,
+  pageUrl: string,
+  imageUrl: string | undefined,
+) {
   const fullChineseName = `${champion.title ?? "称号未提供"} ${champion.name}`;
 
   return {
@@ -376,7 +477,8 @@ function championSchema(champion: Champion, pageUrl: string, imageUrl: string | 
     name: `${fullChineseName} 英雄资料`,
     url: pageUrl,
     primaryImageOfPage: imageUrl,
-    description: champion.description ?? `${champion.name} 的 LOL 英雄资料和皮肤列表。`,
+    description:
+      champion.description ?? `${champion.name} 的 LOL 英雄资料和皮肤列表。`,
     about: {
       "@type": "Person",
       name: fullChineseName,

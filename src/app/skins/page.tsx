@@ -27,17 +27,33 @@ export default async function SkinsPage({ searchParams }: SkinsPageProps) {
         <div className="section__heading">
           <p className="eyebrow">Skin Search</p>
           <h1>皮肤检索</h1>
-          <p>检索请求直接透传到后端真实接口的 `keyword` 参数，页面只渲染接口返回结果。</p>
+          <p>
+            检索请求直接透传到后端真实接口的 `keyword`
+            参数，页面只渲染接口返回结果。
+          </p>
         </div>
-        <form className="search-box search-box--section" action="/skins" role="search">
-          <input name="q" defaultValue={q} placeholder="搜索皮肤、英雄或系列" aria-label="搜索皮肤、英雄或系列" />
+        <form
+          className="search-box search-box--section"
+          action="/skins"
+          role="search"
+        >
+          <input
+            name="q"
+            defaultValue={q}
+            placeholder="搜索皮肤、英雄或系列"
+            aria-label="搜索皮肤、英雄或系列"
+          />
           <button type="submit">搜索</button>
         </form>
         <div className="result-count">共 {skins.length} 个结果</div>
         {skins.length > 0 ? (
           <div className="skin-grid">
             {skins.map((skin, index) => (
-              <SkinCard key={skin.riotSkinId} skin={skin} priority={index < 2} />
+              <SkinCard
+                key={skin.riotSkinId}
+                skin={skin}
+                priority={index < 2}
+              />
             ))}
           </div>
         ) : (

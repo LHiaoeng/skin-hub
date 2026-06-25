@@ -135,19 +135,19 @@ skin-hub/
 
 ## 页面规划
 
-| 页面 | 路由 | 渲染策略 | SEO 目标 |
-| --- | --- | --- | --- |
-| 首页 | `/` | ISR | 聚合最新皮肤、热门英雄、皮肤宇宙、皮肤系列 |
-| 皮肤检索 | `/skins` | SSR | 可索引筛选页，支持 query 参数 |
-| 皮肤详情 | `/skins/[skinId]` | SSG/ISR | 承载皮肤名称、英雄、系列、稀有度、原画、炫彩、上线时间 |
-| 英雄列表 | `/champions` | SSG/ISR | 英雄入口页 |
-| 英雄详情 | `/champions/[championId]` | SSG/ISR | 展示英雄资料与该英雄全部皮肤 |
-| 皮肤系列列表 | `/skinlines` | SSG/ISR | 系列入口页 |
-| 皮肤系列详情 | `/skinlines/[skinlineId]` | SSG/ISR | 展示同系列皮肤、描述、关联宇宙 |
-| 皮肤宇宙列表 | `/universes` | SSG/ISR | 宇宙入口页 |
-| 皮肤宇宙详情 | `/universes/[universeId]` | SSG/ISR | 聚合多个系列与皮肤 |
-| 神话商店 | `/mythic-shop` | SSR/ISR | 展示当前轮换、历史出现次数 |
-| 臻彩藏品 | `/prestige-chromas` | ISR | 展示臻彩列表与更新列表 |
+| 页面         | 路由                      | 渲染策略 | SEO 目标                                               |
+| ------------ | ------------------------- | -------- | ------------------------------------------------------ |
+| 首页         | `/`                       | ISR      | 聚合最新皮肤、热门英雄、皮肤宇宙、皮肤系列             |
+| 皮肤检索     | `/skins`                  | SSR      | 可索引筛选页，支持 query 参数                          |
+| 皮肤详情     | `/skins/[skinId]`         | SSG/ISR  | 承载皮肤名称、英雄、系列、稀有度、原画、炫彩、上线时间 |
+| 英雄列表     | `/champions`              | SSG/ISR  | 英雄入口页                                             |
+| 英雄详情     | `/champions/[championId]` | SSG/ISR  | 展示英雄资料与该英雄全部皮肤                           |
+| 皮肤系列列表 | `/skinlines`              | SSG/ISR  | 系列入口页                                             |
+| 皮肤系列详情 | `/skinlines/[skinlineId]` | SSG/ISR  | 展示同系列皮肤、描述、关联宇宙                         |
+| 皮肤宇宙列表 | `/universes`              | SSG/ISR  | 宇宙入口页                                             |
+| 皮肤宇宙详情 | `/universes/[universeId]` | SSG/ISR  | 聚合多个系列与皮肤                                     |
+| 神话商店     | `/mythic-shop`            | SSR/ISR  | 展示当前轮换、历史出现次数                             |
+| 臻彩藏品     | `/prestige-chromas`       | ISR      | 展示臻彩列表与更新列表                                 |
 
 URL 建议使用稳定 ID + 可读 slug：
 
@@ -242,53 +242,53 @@ GET /rest/lol/search?q=
 
 ```ts
 export interface Skin {
-  id: number
-  riotSkinId: number
-  contentId?: string
-  championId: number
-  isBase: number
-  name: string
-  nameEng?: string
-  description?: string
-  rarity?: string
-  regionRarityId?: number
-  isLegacy?: number
-  isPbeOnly?: number
-  releaseTime?: string
-  splashPath?: string
-  uncenteredSplashPath?: string
-  tilePath?: string
-  loadScreenPath?: string
-  chromasJson?: string
-  skinlineIdSets?: string
-  emblemNames?: string
+  id: number;
+  riotSkinId: number;
+  contentId?: string;
+  championId: number;
+  isBase: number;
+  name: string;
+  nameEng?: string;
+  description?: string;
+  rarity?: string;
+  regionRarityId?: number;
+  isLegacy?: number;
+  isPbeOnly?: number;
+  releaseTime?: string;
+  splashPath?: string;
+  uncenteredSplashPath?: string;
+  tilePath?: string;
+  loadScreenPath?: string;
+  chromasJson?: string;
+  skinlineIdSets?: string;
+  emblemNames?: string;
 }
 
 export interface Champion {
-  id: number
-  heroId: number
-  name: string
-  nameEng?: string
-  title?: string
-  roles?: string
-  squarePortraitPath?: string
+  id: number;
+  heroId: number;
+  name: string;
+  nameEng?: string;
+  title?: string;
+  roles?: string;
+  squarePortraitPath?: string;
 }
 
 export interface Skinline {
-  id: number
-  riotSkinlineId: number
-  name: string
-  engName?: string
-  description?: string
+  id: number;
+  riotSkinlineId: number;
+  name: string;
+  engName?: string;
+  description?: string;
 }
 
 export interface Universe {
-  id: number
-  lolUniverseId: number
-  name: string
-  engName?: string
-  imagePath?: string
-  lolSkinlineIdSets?: string
+  id: number;
+  lolUniverseId: number;
+  name: string;
+  engName?: string;
+  imagePath?: string;
+  lolSkinlineIdSets?: string;
 }
 ```
 

@@ -6,7 +6,15 @@ export const revalidate = 3600;
 export default async function SkinlinesPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ sort?: string | string[]; order?: string | string[] }>;
+  searchParams?: Promise<{
+    sort?: string | string[];
+    order?: string | string[];
+  }>;
 }) {
-  return <HomeContent activeTab="skinlines" skinlineSort={parseSkinlineSort(await searchParams)} />;
+  return (
+    <HomeContent
+      activeTab="skinlines"
+      skinlineSort={parseSkinlineSort(await searchParams)}
+    />
+  );
 }

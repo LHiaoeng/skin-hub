@@ -7,10 +7,21 @@ import { SkinEmblems } from "@/components/skin/skin-emblems";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { CopyButton } from "@/components/ui/copy-button";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { normalizeImageUrl } from "@/lib/images/cdn";
-import { nextSkinSortOrder, type SkinSort, type SkinSortField } from "@/lib/lol/skin-sort";
-import { getContentSection, type ContentSectionKey } from "@/lib/navigation/content-sections";
+import {
+  nextSkinSortOrder,
+  type SkinSort,
+  type SkinSortField,
+} from "@/lib/lol/skin-sort";
+import {
+  getContentSection,
+  type ContentSectionKey,
+} from "@/lib/navigation/content-sections";
 import { skinPath } from "@/lib/routing/slug";
 import type { Skin, SkinDictItem } from "@/types/lol";
 
@@ -49,24 +60,43 @@ export function CollectionDetailLayout({
 
   return (
     <main className={styles.shell}>
-      {backgroundUrls?.length ? <CollectionBackground sources={backgroundUrls} /> : null}
+      {backgroundUrls?.length ? (
+        <CollectionBackground sources={backgroundUrls} />
+      ) : null}
       <div className={styles.scrim} />
       <article className={styles.content}>
         <nav className={styles.breadcrumb} aria-label="面包屑">
           {breadcrumbs.map((item, index) => (
-            <span className={styles.breadcrumbItem} key={`${item.label}-${index}`}>
+            <span
+              className={styles.breadcrumbItem}
+              key={`${item.label}-${index}`}
+            >
               {index > 0 ? <span aria-hidden="true">/</span> : null}
               {item.href ? (
                 <Link href={item.href}>
-                  {item.href === "/" ? <Home aria-hidden="true" className={styles.navigationIcon} /> : null}
-                  {item.sectionKey ? <ContentSectionIcon sectionKey={item.sectionKey} /> : null}
+                  {item.href === "/" ? (
+                    <Home
+                      aria-hidden="true"
+                      className={styles.navigationIcon}
+                    />
+                  ) : null}
+                  {item.sectionKey ? (
+                    <ContentSectionIcon sectionKey={item.sectionKey} />
+                  ) : null}
                   {item.label}
                 </Link>
               ) : (
                 <span className={styles.currentBreadcrumb}>
-                  {item.sectionKey ? <ContentSectionIcon sectionKey={item.sectionKey} /> : null}
+                  {item.sectionKey ? (
+                    <ContentSectionIcon sectionKey={item.sectionKey} />
+                  ) : null}
                   {item.label}
-                  {item.copyable ? <CopyButton className={styles.breadcrumbCopyButton} value={item.label} /> : null}
+                  {item.copyable ? (
+                    <CopyButton
+                      className={styles.breadcrumbCopyButton}
+                      value={item.label}
+                    />
+                  ) : null}
                 </span>
               )}
             </span>
@@ -80,12 +110,20 @@ export function CollectionDetailLayout({
               englishDescription ? (
                 <HoverCard>
                   <HoverCardTrigger asChild>
-                    <p className={`${styles.englishName} ${styles.hoverCardTrigger}`}>
+                    <p
+                      className={`${styles.englishName} ${styles.hoverCardTrigger}`}
+                    >
                       <span>{englishName}</span>
-                      <CopyButton className={styles.actionButton} value={englishName} />
+                      <CopyButton
+                        className={styles.actionButton}
+                        value={englishName}
+                      />
                     </p>
                   </HoverCardTrigger>
-                  <HoverCardContent align="start" className={styles.englishHoverCard}>
+                  <HoverCardContent
+                    align="start"
+                    className={styles.englishHoverCard}
+                  >
                     <strong>{englishName}</strong>
                     <p>{englishDescription}</p>
                   </HoverCardContent>
@@ -93,17 +131,25 @@ export function CollectionDetailLayout({
               ) : (
                 <p className={styles.englishName}>
                   <span>{englishName}</span>
-                  <CopyButton className={styles.actionButton} value={englishName} />
+                  <CopyButton
+                    className={styles.actionButton}
+                    value={englishName}
+                  />
                 </p>
               )
             ) : null}
             {visibleDescription ? (
               <p className={styles.description}>
                 {visibleDescription}
-                <CopyButton className={styles.actionButton} value={visibleDescription} />
+                <CopyButton
+                  className={styles.actionButton}
+                  value={visibleDescription}
+                />
               </p>
             ) : null}
-            {heroMeta ? <div className={styles.heroMeta}>{heroMeta}</div> : null}
+            {heroMeta ? (
+              <div className={styles.heroMeta}>{heroMeta}</div>
+            ) : null}
           </div>
         </section>
 
@@ -131,10 +177,18 @@ export function SkinSortToolbar({
   return (
     <div className={styles.toolbar}>
       <ButtonGroup className={styles.sortLinks} aria-label="皮肤排序">
-        <SkinSortLink basePath={basePath} field="release" activeSort={activeSort}>
+        <SkinSortLink
+          basePath={basePath}
+          field="release"
+          activeSort={activeSort}
+        >
           发布时间
         </SkinSortLink>
-        <SkinSortLink basePath={basePath} field="rarity" activeSort={activeSort}>
+        <SkinSortLink
+          basePath={basePath}
+          field="rarity"
+          activeSort={activeSort}
+        >
           皮肤品质
         </SkinSortLink>
       </ButtonGroup>
@@ -182,7 +236,9 @@ export function CollectionSection({
 }) {
   const titleContent = (
     <>
-      {Icon ? <Icon aria-hidden="true" className={styles.collectionSectionIcon} /> : null}
+      {Icon ? (
+        <Icon aria-hidden="true" className={styles.collectionSectionIcon} />
+      ) : null}
       {title}
     </>
   );
@@ -203,8 +259,16 @@ export function MetaTag({ children }: { children: React.ReactNode }) {
   return <span className={styles.tag}>{children}</span>;
 }
 
-export function InlineCopyButton({ value, label }: { value: string | number; label: string }) {
-  return <CopyButton className={styles.actionButton} value={value} label={label} />;
+export function InlineCopyButton({
+  value,
+  label,
+}: {
+  value: string | number;
+  label: string;
+}) {
+  return (
+    <CopyButton className={styles.actionButton} value={value} label={label} />
+  );
 }
 
 function SkinTile({
@@ -218,13 +282,22 @@ function SkinTile({
   emblemDictItems: SkinDictItem[];
   rarityDictItems: SkinDictItem[];
 }) {
-  const imageUrl = normalizeImageUrl(skin.tilePath ?? skin.loadScreenPath ?? skin.splashPath, skin.isPbeOnly);
+  const imageUrl = normalizeImageUrl(
+    skin.tilePath ?? skin.loadScreenPath ?? skin.splashPath,
+    skin.isPbeOnly,
+  );
 
   return (
     <Link className={styles.skinItem} href={skinPath(skin)} title={skin.name}>
       <span className={styles.skinThumb}>
         {imageUrl ? (
-          <Image src={imageUrl} alt={`${skin.name} 皮肤卡片图`} fill priority={priority} sizes="(max-width: 520px) 46vw, 280px" />
+          <Image
+            src={imageUrl}
+            alt={`${skin.name} 皮肤卡片图`}
+            fill
+            priority={priority}
+            sizes="(max-width: 520px) 46vw, 280px"
+          />
         ) : (
           <span className={styles.imagePlaceholder}>暂无图片</span>
         )}
@@ -260,14 +333,27 @@ function SkinSortLink({
   children: React.ReactNode;
 }) {
   const nextOrder = nextSkinSortOrder(field, activeSort);
-  const href = field === "release" && nextOrder === "asc" ? basePath : `${basePath}?sort=${field}&order=${nextOrder}`;
+  const href =
+    field === "release" && nextOrder === "asc"
+      ? basePath
+      : `${basePath}?sort=${field}&order=${nextOrder}`;
   const active = field === activeSort.field;
 
   return (
-    <Button asChild className={`${styles.actionButton} ${styles.sortButton} ${active ? styles.active : ""}`} variant="outline">
+    <Button
+      asChild
+      className={`${styles.actionButton} ${styles.sortButton} ${active ? styles.active : ""}`}
+      variant="outline"
+    >
       <Link href={href}>
         {children}
-        {active ? activeSort.order === "asc" ? <ArrowUp aria-hidden="true" /> : <ArrowDown aria-hidden="true" /> : null}
+        {active ? (
+          activeSort.order === "asc" ? (
+            <ArrowUp aria-hidden="true" />
+          ) : (
+            <ArrowDown aria-hidden="true" />
+          )
+        ) : null}
       </Link>
     </Button>
   );

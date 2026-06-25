@@ -2,7 +2,14 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { ArrowDownAZ, ArrowDownWideNarrow, ArrowUpAZ, ArrowUpNarrowWide, FileDigit, Languages } from "lucide-react";
+import {
+  ArrowDownAZ,
+  ArrowDownWideNarrow,
+  ArrowUpAZ,
+  ArrowUpNarrowWide,
+  FileDigit,
+  Languages,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +23,10 @@ const SkinlineIcon = getContentSection("skinlines").icon;
 
 function parseSkinlineIds(lolSkinlineIdSets?: string): number[] {
   if (!lolSkinlineIdSets) return [];
-  return lolSkinlineIdSets.split(",").map((id) => Number(id.trim())).filter((id) => !isNaN(id) && id > 0);
+  return lolSkinlineIdSets
+    .split(",")
+    .map((id) => Number(id.trim()))
+    .filter((id) => !isNaN(id) && id > 0);
 }
 
 type SortKey = "name" | "skinlineCount";
@@ -75,7 +85,11 @@ export function UniversesTree({ universes, skinlines }: UniversesTreeProps) {
       <div className="flex items-center">
         <ButtonGroup aria-label="皮肤宇宙排序">
           <Button
-            className={sortKey === "name" ? "bg-accent text-accent-foreground" : undefined}
+            className={
+              sortKey === "name"
+                ? "bg-accent text-accent-foreground"
+                : undefined
+            }
             variant="outline"
             size="sm"
             onClick={() => toggleSort("name")}
@@ -83,11 +97,19 @@ export function UniversesTree({ universes, skinlines }: UniversesTreeProps) {
             <Languages data-icon="inline-start" />
             名称
             {sortKey === "name" ? (
-              sortOrder === "asc" ? <ArrowUpAZ data-icon="inline-end" /> : <ArrowDownAZ data-icon="inline-end" />
+              sortOrder === "asc" ? (
+                <ArrowUpAZ data-icon="inline-end" />
+              ) : (
+                <ArrowDownAZ data-icon="inline-end" />
+              )
             ) : null}
           </Button>
           <Button
-            className={sortKey === "skinlineCount" ? "bg-accent text-accent-foreground" : undefined}
+            className={
+              sortKey === "skinlineCount"
+                ? "bg-accent text-accent-foreground"
+                : undefined
+            }
             variant="outline"
             size="sm"
             onClick={() => toggleSort("skinlineCount")}
@@ -108,14 +130,25 @@ export function UniversesTree({ universes, skinlines }: UniversesTreeProps) {
       <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 [column-fill:balance]">
         {sortedUniverses.map((universe) => {
           const skinlineIds = parseSkinlineIds(universe.lolSkinlineIdSets);
-          const linkedSkinlines = skinlineIds.map((id) => skinlineMap.get(id)).filter((sl): sl is Skinline => sl !== undefined);
+          const linkedSkinlines = skinlineIds
+            .map((id) => skinlineMap.get(id))
+            .filter((sl): sl is Skinline => sl !== undefined);
 
           return (
-            <Card key={universe.lolUniverseId} className="break-inside-avoid mb-4 overflow-hidden">
+            <Card
+              key={universe.lolUniverseId}
+              className="break-inside-avoid mb-4 overflow-hidden"
+            >
               <CardHeader className="p-3 pb-0">
                 <CardTitle className="text-lg">
-                  <Link href={universePath(universe)} className="inline-flex items-center gap-2 hover:underline">
-                    <UniverseIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+                  <Link
+                    href={universePath(universe)}
+                    className="inline-flex items-center gap-2 hover:underline"
+                  >
+                    <UniverseIcon
+                      aria-hidden="true"
+                      className="size-4 shrink-0 text-muted-foreground"
+                    />
                     {universe.name}
                   </Link>
                 </CardTitle>
@@ -129,7 +162,10 @@ export function UniversesTree({ universes, skinlines }: UniversesTreeProps) {
                         icon={SkinlineIcon}
                         className="text-base"
                         name={
-                          <Link href={skinlinePath(sl)} className="hover:underline">
+                          <Link
+                            href={skinlinePath(sl)}
+                            className="hover:underline"
+                          >
                             {sl.name}
                           </Link>
                         }

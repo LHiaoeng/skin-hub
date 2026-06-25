@@ -7,8 +7,13 @@ export interface SkinSort {
   order: SkinSortOrder;
 }
 
-export function parseSkinSort(searchParams: { sort?: string | string[]; order?: string | string[] } | undefined): SkinSort {
-  const field = firstValue(searchParams?.sort) === "rarity" ? "rarity" : "release";
+export function parseSkinSort(
+  searchParams:
+    | { sort?: string | string[]; order?: string | string[] }
+    | undefined,
+): SkinSort {
+  const field =
+    firstValue(searchParams?.sort) === "rarity" ? "rarity" : "release";
   const order = firstValue(searchParams?.order) === "desc" ? "desc" : "asc";
   return { field, order };
 }
@@ -18,16 +23,24 @@ export function sortSkins(skins: Skin[], sort: SkinSort): Skin[] {
 
   return [...skins].sort((left, right) => {
     if (sort.field === "rarity") {
-      return (rarityValue(left) - rarityValue(right) || left.riotSkinId - right.riotSkinId) * direction;
+      return (
+        (rarityValue(left) - rarityValue(right) ||
+          left.riotSkinId - right.riotSkinId) * direction
+      );
     }
 
     const leftTime = Date.parse(left.releaseTime ?? "") || left.riotSkinId;
     const rightTime = Date.parse(right.releaseTime ?? "") || right.riotSkinId;
-    return (leftTime - rightTime || left.riotSkinId - right.riotSkinId) * direction;
+    return (
+      (leftTime - rightTime || left.riotSkinId - right.riotSkinId) * direction
+    );
   });
 }
 
-export function nextSkinSortOrder(field: SkinSortField, activeSort: SkinSort): SkinSortOrder {
+export function nextSkinSortOrder(
+  field: SkinSortField,
+  activeSort: SkinSort,
+): SkinSortOrder {
   if (activeSort.field === field) {
     return activeSort.order === "asc" ? "desc" : "asc";
   }
@@ -41,5 +54,7 @@ function firstValue(value: string | string[] | undefined): string | undefined {
 
 function rarityValue(skin: Skin): number {
   const numericRarity = Number(skin.rarity);
-  return Number.isFinite(numericRarity) ? numericRarity : Number(skin.regionRarityId ?? 0);
+  return Number.isFinite(numericRarity)
+    ? numericRarity
+    : Number(skin.regionRarityId ?? 0);
 }

@@ -28,7 +28,10 @@
   border: 1px solid hsl(var(--border));
   border-radius: 12px;
   background: hsl(var(--card));
-  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease;
 }
 
 .latestItem:hover {
@@ -100,5 +103,4 @@
   .latestList {
     grid-template-columns: 1fr;
   }
-
 }

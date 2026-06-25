@@ -32,7 +32,9 @@ export function SkinEmblems({
             style={
               scalePercent === undefined
                 ? undefined
-                : ({ "--emblem-scale": String(scalePercent / 100) } as React.CSSProperties)
+                : ({
+                    "--emblem-scale": String(scalePercent / 100),
+                  } as React.CSSProperties)
             }
             title={emblem.name}
           />

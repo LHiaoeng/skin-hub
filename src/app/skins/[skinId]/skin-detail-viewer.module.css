@@ -35,7 +35,12 @@
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgb(0 0 0 / 0.16), transparent 24%, rgb(0 0 0 / 0.22)),
+    linear-gradient(
+      180deg,
+      rgb(0 0 0 / 0.16),
+      transparent 24%,
+      rgb(0 0 0 / 0.22)
+    ),
     radial-gradient(circle at 50% 50%, transparent 0 46%, rgb(0 0 0 / 0.18) 88%);
 }
 
@@ -105,7 +110,11 @@
   background: rgb(5 8 13 / 0.28);
   box-shadow: none;
   opacity: 0.72;
-  transition: opacity 180ms ease, color 180ms ease, background 180ms ease, border-color 180ms ease;
+  transition:
+    opacity 180ms ease,
+    color 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease;
   backdrop-filter: blur(12px);
 }
 
@@ -280,7 +289,9 @@
   z-index: 4;
   display: flex;
   justify-content: center;
-  padding: 56px max(18px, env(safe-area-inset-right)) max(46px, calc(env(safe-area-inset-bottom) + 28px)) max(18px, env(safe-area-inset-left));
+  padding: 56px max(18px, env(safe-area-inset-right))
+    max(46px, calc(env(safe-area-inset-bottom) + 28px))
+    max(18px, env(safe-area-inset-left));
   pointer-events: none;
 }
 
@@ -294,7 +305,9 @@
   background: rgb(5 8 13 / 0.58);
   opacity: 0;
   transform: translateY(18px);
-  transition: opacity 180ms ease, transform 180ms ease;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
   pointer-events: none;
   backdrop-filter: blur(18px);
 }
@@ -368,7 +381,10 @@
   box-shadow: 0 14px 34px rgb(0 0 0 / 0.32);
   cursor: pointer;
   transform: translateY(-50%);
-  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
   backdrop-filter: blur(14px);
 }
 
@@ -515,7 +531,9 @@
   width: min(420px, 100%);
   max-height: 100vh;
   gap: 18px;
-  padding: max(24px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) 18px;
+  padding: max(24px, env(safe-area-inset-top))
+    max(18px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom))
+    18px;
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -650,7 +668,10 @@
   padding: 10px 12px;
   border-radius: 12px;
   color: #f8fbff;
-  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
 }
 
 .definitionList {

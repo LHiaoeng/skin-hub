@@ -2,14 +2,45 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { JsonLd } from "@/components/seo/json-ld";
-import { getChampion, getChampionSkins, getLolDictionaries, getSkin, getSkinlines, getSkins, getUniverses } from "@/lib/api/backend-client";
+import {
+  getChampion,
+  getChampionSkins,
+  getLolDictionaries,
+  getSkin,
+  getSkinlines,
+  getSkins,
+  getUniverses,
+} from "@/lib/api/backend-client";
 import { normalizeImageUrl } from "@/lib/images/cdn";
-import { getCnRarityIconUrl, getCnRarityName, getEmblemDisplayItems, getGlobalRarityIconUrl, getGlobalRarityName } from "@/lib/lol/rarity";
-import { championPath, parseRouteId, skinlinePath, skinPath, universePath } from "@/lib/routing/slug";
+import {
+  getCnRarityIconUrl,
+  getCnRarityName,
+  getEmblemDisplayItems,
+  getGlobalRarityIconUrl,
+  getGlobalRarityName,
+} from "@/lib/lol/rarity";
+import {
+  championPath,
+  parseRouteId,
+  skinlinePath,
+  skinPath,
+  universePath,
+} from "@/lib/routing/slug";
 import { breadcrumbSchema, skinImageSchema } from "@/lib/seo/schema";
-import type { Champion, Skin, SkinChroma, SkinDictItem, Skinline, Universe } from "@/types/lol";
+import type {
+  Champion,
+  Skin,
+  SkinChroma,
+  SkinDictItem,
+  Skinline,
+  Universe,
+} from "@/types/lol";
 
-import { SkinDetailViewer, type SkinDetailViewerProps, type SkinVisual } from "./skin-detail-viewer";
+import {
+  SkinDetailViewer,
+  type SkinDetailViewerProps,
+  type SkinVisual,
+} from "./skin-detail-viewer";
 
 interface SkinDetailPageProps {
   params: Promise<{
@@ -28,7 +59,9 @@ export async function generateStaticParams() {
   }));
 }
 
-export async function generateMetadata({ params }: SkinDetailPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: SkinDetailPageProps): Promise<Metadata> {
   const { skinId } = await params;
   const skin = await getSkin(parseRouteId(skinId));
 
@@ -38,8 +71,13 @@ export async function generateMetadata({ params }: SkinDetailPageProps): Promise
     };
   }
 
-  const imageUrl = normalizeImageUrl(skin.uncenteredSplashPath ?? skin.splashPath ?? skin.loadScreenPath, skin.isPbeOnly);
-  const description = skin.description ?? `${skin.name} 的皮肤原画、英雄、稀有度、系列和上线时间。`;
+  const imageUrl = normalizeImageUrl(
+    skin.uncenteredSplashPath ?? skin.splashPath ?? skin.loadScreenPath,
+    skin.isPbeOnly,
+  );
+  const description =
+    skin.description ??
+    `${skin.name} 的皮肤原画、英雄、稀有度、系列和上线时间。`;
 
   return {
     title: `${skin.name} 皮肤详情`,
@@ -50,7 +88,9 @@ export async function generateMetadata({ params }: SkinDetailPageProps): Promise
     openGraph: {
       title: `${skin.name} 皮肤详情`,
       description,
-      images: imageUrl ? [{ url: imageUrl, alt: `${skin.name} 皮肤原画` }] : undefined,
+      images: imageUrl
+        ? [{ url: imageUrl, alt: `${skin.name} 皮肤原画` }]
+        : undefined,
     },
   };
 }
@@ -63,17 +103,21 @@ export default async function SkinDetailPage({ params }: SkinDetailPageProps) {
     notFound();
   }
 
-  const [champion, championSkins, dictionaries, allSkinlines, allUniverses] = await Promise.all([
-    getChampion(skin.championId),
-    getChampionSkins(skin.championId, revalidate),
-    getLolDictionaries(revalidate),
-    getSkinlines(),
-    getUniverses(),
-  ]);
+  const [champion, championSkins, dictionaries, allSkinlines, allUniverses] =
+    await Promise.all([
+      getChampion(skin.championId),
+      getChampionSkins(skin.championId, revalidate),
+      getLolDictionaries(revalidate),
+      getSkinlines(),
+      getUniverses(),
+    ]);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const pageUrl = `${siteUrl}${skinPath(skin)}`;
-  const splashUrl = normalizeImageUrl(skin.uncenteredSplashPath ?? skin.splashPath ?? skin.loadScreenPath, skin.isPbeOnly);
+  const splashUrl = normalizeImageUrl(
+    skin.uncenteredSplashPath ?? skin.splashPath ?? skin.loadScreenPath,
+    skin.isPbeOnly,
+  );
   const viewerProps = buildViewerProps({
     skin,
     champion,
@@ -121,22 +165,43 @@ function buildViewerProps({
 }): SkinDetailViewerProps {
   const championName = getChampionDisplayName(champion, skin);
   const sortedChampionSkins = sortSkinsByRelease(championSkins);
-  const currentIndex = sortedChampionSkins.findIndex((item) => item.riotSkinId === skin.riotSkinId);
-  const prevSkin = currentIndex > 0 ? sortedChampionSkins[currentIndex - 1] : undefined;
-  const nextSkin = currentIndex >= 0 && currentIndex < sortedChampionSkins.length - 1 ? sortedChampionSkins[currentIndex + 1] : undefined;
+  const currentIndex = sortedChampionSkins.findIndex(
+    (item) => item.riotSkinId === skin.riotSkinId,
+  );
+  const prevSkin =
+    currentIndex > 0 ? sortedChampionSkins[currentIndex - 1] : undefined;
+  const nextSkin =
+    currentIndex >= 0 && currentIndex < sortedChampionSkins.length - 1
+      ? sortedChampionSkins[currentIndex + 1]
+      : undefined;
   const skinlines = resolveSkinlines(skin, allSkinlines);
   const universes = resolveUniverses(skin, skinlines, allUniverses);
   const rarityName = getCnRarityName(skin.regionRarityId, cnRarityItems);
   const globalRarityName = getGlobalRarityName(skin.rarity, globalRarityItems);
-  const rarityIconUrl = getCnRarityIconUrl(skin.regionRarityId, skin.rarityGemPath, skin.isPbeOnly, cnRarityItems);
-  const globalRarityIconUrl = getGlobalRarityIconUrl(skin.rarity, skin.isPbeOnly, globalRarityItems);
-  const emblems = getEmblemDisplayItems(emblemItems, skin.emblemNames, skin.isPbeOnly);
+  const rarityIconUrl = getCnRarityIconUrl(
+    skin.regionRarityId,
+    skin.rarityGemPath,
+    skin.isPbeOnly,
+    cnRarityItems,
+  );
+  const globalRarityIconUrl = getGlobalRarityIconUrl(
+    skin.rarity,
+    skin.isPbeOnly,
+    globalRarityItems,
+  );
+  const emblems = getEmblemDisplayItems(
+    emblemItems,
+    skin.emblemNames,
+    skin.isPbeOnly,
+  );
   const emblemNames = emblems.map((item) => item.name);
   const chromas = parseSkinChromas(skin);
 
   return {
     skinName: skin.name,
-    description: skin.description ?? `${skin.name} 的 LOL 皮肤详情，包含原画、稀有度、系列和上线时间。`,
+    description:
+      skin.description ??
+      `${skin.name} 的 LOL 皮肤详情，包含原画、稀有度、系列和上线时间。`,
     championName,
     championHref: champion ? championPath(champion) : undefined,
     rarityName,
@@ -153,7 +218,9 @@ function buildViewerProps({
       { label: "英雄", value: championName },
       { label: "英雄 ID", value: String(skin.championId) },
       { label: "是否正式上线", value: skin.isPbeOnly ? "否" : "是" },
-      ...(skin.releaseTime ? [{ label: "上线时间", value: skin.releaseTime }] : []),
+      ...(skin.releaseTime
+        ? [{ label: "上线时间", value: skin.releaseTime }]
+        : []),
       {
         label: "国服皮肤品质",
         icons: rarityIconUrl
@@ -176,7 +243,12 @@ function buildViewerProps({
     ],
     globalDetails: [
       { label: "英文名", value: skin.nameEng ?? "未提供" },
-      { label: "直营服皮肤品质", icons: globalRarityIconUrl ? [{ name: globalRarityName, iconUrl: globalRarityIconUrl }] : [] },
+      {
+        label: "直营服皮肤品质",
+        icons: globalRarityIconUrl
+          ? [{ name: globalRarityName, iconUrl: globalRarityIconUrl }]
+          : [],
+      },
     ],
     skinlines: skinlines.map((item) => ({
       label: item.name,
@@ -203,9 +275,15 @@ function buildViewerProps({
         label: "去卡达查看 3D 模型",
         href: `https://3d.buguoguo.cn/model-viewer?id=${skin.riotSkinId}`,
       },
-    ].filter((item): item is SkinDetailViewerProps["externalLinks"][number] => Boolean(item)),
-    prevSkin: prevSkin ? { label: prevSkin.name, href: skinPath(prevSkin) } : undefined,
-    nextSkin: nextSkin ? { label: nextSkin.name, href: skinPath(nextSkin) } : undefined,
+    ].filter((item): item is SkinDetailViewerProps["externalLinks"][number] =>
+      Boolean(item),
+    ),
+    prevSkin: prevSkin
+      ? { label: prevSkin.name, href: skinPath(prevSkin) }
+      : undefined,
+    nextSkin: nextSkin
+      ? { label: nextSkin.name, href: skinPath(nextSkin) }
+      : undefined,
     visuals: buildVisuals(skin, chromas),
   };
 }
@@ -232,7 +310,9 @@ function resolveSkinlines(skin: Skin, allSkinlines: Skinline[]) {
   }
 
   const ids = splitIdSet(skin.skinlineIdSets);
-  const fromIds = allSkinlines.filter((skinline) => ids.includes(skinline.riotSkinlineId));
+  const fromIds = allSkinlines.filter((skinline) =>
+    ids.includes(skinline.riotSkinlineId),
+  );
 
   if (fromIds.length) {
     return fromIds;
@@ -247,13 +327,21 @@ function resolveSkinlines(skin: Skin, allSkinlines: Skinline[]) {
   );
 }
 
-function resolveUniverses(skin: Skin, skinlines: Skinline[], allUniverses: Universe[]) {
+function resolveUniverses(
+  skin: Skin,
+  skinlines: Skinline[],
+  allUniverses: Universe[],
+) {
   if (skin.universes?.length) {
     return skin.universes;
   }
 
-  const skinlineIds = new Set(skinlines.map((skinline) => skinline.riotSkinlineId));
-  return allUniverses.filter((universe) => splitIdSet(universe.lolSkinlineIdSets).some((id) => skinlineIds.has(id)));
+  const skinlineIds = new Set(
+    skinlines.map((skinline) => skinline.riotSkinlineId),
+  );
+  return allUniverses.filter((universe) =>
+    splitIdSet(universe.lolSkinlineIdSets).some((id) => skinlineIds.has(id)),
+  );
 }
 
 function splitIdSet(value?: string) {
@@ -269,11 +357,24 @@ function buildVisuals(skin: Skin, chromas: SkinChroma[]): SkinVisual[] {
   const baseVisual: SkinVisual = {
     id: `skin-${skin.riotSkinId}`,
     name: skin.name,
-    imageUrl: normalizeImageUrl(skin.uncenteredSplashPath ?? skin.splashPath ?? skin.loadScreenPath, skin.isPbeOnly),
-    focusImageUrl: normalizeImageUrl(skin.splashPath ?? skin.uncenteredSplashPath ?? skin.loadScreenPath, skin.isPbeOnly),
+    imageUrl: normalizeImageUrl(
+      skin.uncenteredSplashPath ?? skin.splashPath ?? skin.loadScreenPath,
+      skin.isPbeOnly,
+    ),
+    focusImageUrl: normalizeImageUrl(
+      skin.splashPath ?? skin.uncenteredSplashPath ?? skin.loadScreenPath,
+      skin.isPbeOnly,
+    ),
     videoUrl: normalizeImageUrl(skin.collectionSplashVideoPath, skin.isPbeOnly),
     focusVideoUrl: normalizeImageUrl(skin.splashVideoPath, skin.isPbeOnly),
-    thumbUrl: normalizeImageUrl(skin.chromaPath ?? skin.loadScreenVintagePath ?? skin.loadScreenPath ?? skin.tilePath ?? skin.splashPath, skin.isPbeOnly),
+    thumbUrl: normalizeImageUrl(
+      skin.chromaPath ??
+        skin.loadScreenVintagePath ??
+        skin.loadScreenPath ??
+        skin.tilePath ??
+        skin.splashPath,
+      skin.isPbeOnly,
+    ),
     colors: [],
     description: skin.description,
   };
@@ -284,14 +385,35 @@ function buildVisuals(skin: Skin, chromas: SkinChroma[]): SkinVisual[] {
     isChroma: true,
     chromaImageUrl: normalizeImageUrl(chroma.chromaPath, skin.isPbeOnly),
     imageUrl: normalizeImageUrl(
-      chroma.uncenteredSplashPath ?? chroma.splashPath ?? chroma.chromaPath ?? chroma.tilePath ?? skin.uncenteredSplashPath,
+      chroma.uncenteredSplashPath ??
+        chroma.splashPath ??
+        chroma.chromaPath ??
+        chroma.tilePath ??
+        skin.uncenteredSplashPath,
       skin.isPbeOnly,
     ),
-    focusImageUrl: normalizeImageUrl(chroma.splashPath ?? chroma.uncenteredSplashPath ?? chroma.chromaPath ?? skin.splashPath, skin.isPbeOnly),
-    videoUrl: normalizeImageUrl(chroma.collectionSplashVideoPath, skin.isPbeOnly),
-    focusVideoUrl: normalizeImageUrl(chroma.splashVideoPath ?? chroma.previewVideoUrl, skin.isPbeOnly),
+    focusImageUrl: normalizeImageUrl(
+      chroma.splashPath ??
+        chroma.uncenteredSplashPath ??
+        chroma.chromaPath ??
+        skin.splashPath,
+      skin.isPbeOnly,
+    ),
+    videoUrl: normalizeImageUrl(
+      chroma.collectionSplashVideoPath,
+      skin.isPbeOnly,
+    ),
+    focusVideoUrl: normalizeImageUrl(
+      chroma.splashVideoPath ?? chroma.previewVideoUrl,
+      skin.isPbeOnly,
+    ),
     thumbUrl: normalizeImageUrl(
-      chroma.chromaPath ?? chroma.loadScreenVintagePath ?? chroma.loadScreenPath ?? chroma.tilePath ?? chroma.splashPath ?? skin.loadScreenPath,
+      chroma.chromaPath ??
+        chroma.loadScreenVintagePath ??
+        chroma.loadScreenPath ??
+        chroma.tilePath ??
+        chroma.splashPath ??
+        skin.loadScreenPath,
       skin.isPbeOnly,
     ),
     colors: chroma.colors ?? [],
@@ -308,7 +430,11 @@ function parseSkinChromas(skin: Skin): SkinChroma[] {
   if (raw) {
     try {
       const parsed: unknown = JSON.parse(raw);
-      const items = Array.isArray(parsed) ? parsed : isRecord(parsed) && Array.isArray(parsed.chromas) ? parsed.chromas : [];
+      const items = Array.isArray(parsed)
+        ? parsed
+        : isRecord(parsed) && Array.isArray(parsed.chromas)
+          ? parsed.chromas
+          : [];
       items
         .map(normalizeChroma)
         .filter((item): item is SkinChroma => item !== undefined)
@@ -379,5 +505,8 @@ function stringArrayOf(value: unknown) {
     return [];
   }
 
-  return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  return value.filter(
+    (item): item is string =>
+      typeof item === "string" && item.trim().length > 0,
+  );
 }

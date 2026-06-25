@@ -40,9 +40,7 @@ export function TreeFolder({
         <span className="truncate">{name}</span>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="ml-5 mt-1 space-y-1 border-l pl-3">
-          {children}
-        </div>
+        <div className="ml-5 mt-1 space-y-1 border-l pl-3">{children}</div>
       </CollapsibleContent>
     </Collapsible>
   );

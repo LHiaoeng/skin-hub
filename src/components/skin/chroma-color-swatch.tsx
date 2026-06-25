@@ -3,7 +3,11 @@
 import { Check, Copy } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 import styles from "./chroma-color-swatch.module.css";
 
@@ -67,7 +71,9 @@ export function ChromaColorSwatch({
         title={label}
         aria-label={label}
         role="img"
-        onClick={stopPropagation ? (event) => event.stopPropagation() : undefined}
+        onClick={
+          stopPropagation ? (event) => event.stopPropagation() : undefined
+        }
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- Empty chroma color is a generated SVG image data URL. */}
         <img
@@ -89,7 +95,9 @@ export function ChromaColorSwatch({
         title={label}
         aria-label={label}
         role="img"
-        onClick={stopPropagation ? (event) => event.stopPropagation() : undefined}
+        onClick={
+          stopPropagation ? (event) => event.stopPropagation() : undefined
+        }
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- Chroma colors are generated SVG image data URLs. */}
         <img
@@ -112,7 +120,9 @@ export function ChromaColorSwatch({
           type="button"
           aria-label={label}
           title={label}
-          onClick={stopPropagation ? (event) => event.stopPropagation() : undefined}
+          onClick={
+            stopPropagation ? (event) => event.stopPropagation() : undefined
+          }
           onMouseEnter={openPopover}
           onMouseLeave={scheduleClose}
         >
@@ -122,7 +132,9 @@ export function ChromaColorSwatch({
             src={buildChromaSwatchDataUrl(normalizedColors)}
             alt=""
             height={size}
-            style={{ "--chroma-swatch-size": `${size}px` } as React.CSSProperties}
+            style={
+              { "--chroma-swatch-size": `${size}px` } as React.CSSProperties
+            }
             width={size}
           />
         </button>
@@ -197,7 +209,8 @@ export function normalizeChromaColors(colors: string[]) {
 const normalizeColors = normalizeChromaColors;
 
 function buildChromaSwatchDataUrl(colors: string[]) {
-  const fills = colors.length === 1 ? buildSingleFill(colors[0]) : buildMultiFill(colors);
+  const fills =
+    colors.length === 1 ? buildSingleFill(colors[0]) : buildMultiFill(colors);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${fills}<circle cx="50" cy="50" r="47" fill="none" stroke="#d7dce6" stroke-width="6"/></svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
@@ -237,7 +250,12 @@ function buildMultiFill(colors: string[]) {
     .join("");
 }
 
-function polarToPoint(centerX: number, centerY: number, radius: number, angleInDegrees: number) {
+function polarToPoint(
+  centerX: number,
+  centerY: number,
+  radius: number,
+  angleInDegrees: number,
+) {
   const angleInRadians = (angleInDegrees * Math.PI) / 180;
   return {
     x: Number((centerX + radius * Math.cos(angleInRadians)).toFixed(3)),
@@ -246,7 +264,11 @@ function polarToPoint(centerX: number, centerY: number, radius: number, angleInD
 }
 
 function escapeSvgAttribute(value: string) {
-  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function ChromaColorValue({ color }: { color: string }) {
@@ -259,10 +281,19 @@ function ChromaColorValue({ color }: { color: string }) {
   }
 
   return (
-    <button className={styles.colorValue} type="button" onClick={handleCopy} title="复制颜色值">
+    <button
+      className={styles.colorValue}
+      type="button"
+      onClick={handleCopy}
+      title="复制颜色值"
+    >
       <span style={{ backgroundColor: color }} />
       <code>{color}</code>
-      {isCopied ? <Check size={13} aria-hidden /> : <Copy size={13} aria-hidden />}
+      {isCopied ? (
+        <Check size={13} aria-hidden />
+      ) : (
+        <Copy size={13} aria-hidden />
+      )}
     </button>
   );
 }

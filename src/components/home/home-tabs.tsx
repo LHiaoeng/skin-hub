@@ -2,12 +2,23 @@
 import Link from "next/link";
 
 import { normalizeImageUrl } from "@/lib/images/cdn";
-import { contentSections, type ContentSectionKey } from "@/lib/navigation/content-sections";
+import {
+  contentSections,
+  type ContentSectionKey,
+} from "@/lib/navigation/content-sections";
 import { championPath } from "@/lib/routing/slug";
 import { UniversesTree } from "@/features/universes/universes-tree";
-import type { Champion, SkinDictItem, SkinlineSummary, Universe } from "@/types/lol";
+import type {
+  Champion,
+  PrestigeChroma,
+  SkinDictItem,
+  SkinlineSummary,
+  Universe,
+} from "@/types/lol";
+import type { PrestigeChromaListOptions } from "@/lib/lol/prestige-chroma";
 import type { SkinlineSort } from "@/lib/lol/skinline-sort";
 import { SkinlineList } from "@/components/home/skinline-list";
+import { PrestigeChromaList } from "@/components/home/prestige-chroma-list";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -34,7 +45,9 @@ function getChampionFilterHref({
 }
 
 function getDictValue(item: SkinDictItem) {
-  return item.value === undefined || item.value === null ? "" : String(item.value);
+  return item.value === undefined || item.value === null
+    ? ""
+    : String(item.value);
 }
 
 function getDictName(item: SkinDictItem) {
@@ -43,18 +56,28 @@ function getDictName(item: SkinDictItem) {
 
 function hasChampionRole(champion: Champion, role?: string) {
   if (!role) return true;
-  return champion.roles?.split(",").map((r) => r.trim().toLowerCase()).includes(role.toLowerCase()) ?? false;
+  return (
+    champion.roles
+      ?.split(",")
+      .map((r) => r.trim().toLowerCase())
+      .includes(role.toLowerCase()) ?? false
+  );
 }
 
 function hasChampionPosition(champion: Champion, position?: string) {
   if (!position) return true;
-  return champion.positions?.some((p) => p.toLowerCase() === position.toLowerCase()) ?? false;
+  return (
+    champion.positions?.some(
+      (p) => p.toLowerCase() === position.toLowerCase(),
+    ) ?? false
+  );
 }
 
 export function HomeTabs({
   champions,
   universes,
   skinlines,
+  prestigeChromas,
   championRoles,
   championPositions,
   selectedRole,
@@ -62,10 +85,12 @@ export function HomeTabs({
   activeTab = "champions",
   championBasePath = "/champions",
   skinlineSort = { key: "name", order: "asc" },
+  prestigeChromaOptions = { groupBy: "all", sortBy: "rank", order: "desc" },
 }: {
   champions: Champion[];
   universes: Universe[];
   skinlines: SkinlineSummary[];
+  prestigeChromas: PrestigeChroma[];
   championRoles: SkinDictItem[];
   championPositions: SkinDictItem[];
   selectedRole?: string;
@@ -73,9 +98,12 @@ export function HomeTabs({
   activeTab?: HomeTabKey;
   championBasePath?: "/" | "/champions";
   skinlineSort?: SkinlineSort;
+  prestigeChromaOptions?: PrestigeChromaListOptions;
 }) {
   const filteredChampions = champions.filter(
-    (ch) => hasChampionRole(ch, selectedRole) && hasChampionPosition(ch, selectedPosition),
+    (ch) =>
+      hasChampionRole(ch, selectedRole) &&
+      hasChampionPosition(ch, selectedPosition),
   );
 
   return (
@@ -104,7 +132,10 @@ export function HomeTabs({
                   <ButtonGroup aria-label="英雄位置筛选">
                     <ChampionFilterButton
                       active={!selectedPosition}
-                      href={getChampionFilterHref({ basePath: championBasePath, role: selectedRole })}
+                      href={getChampionFilterHref({
+                        basePath: championBasePath,
+                        role: selectedRole,
+                      })}
                     >
                       全部
                     </ChampionFilterButton>
@@ -113,7 +144,11 @@ export function HomeTabs({
                       return value ? (
                         <ChampionFilterButton
                           active={selectedPosition === value}
-                          href={getChampionFilterHref({ basePath: championBasePath, role: selectedRole, position: value })}
+                          href={getChampionFilterHref({
+                            basePath: championBasePath,
+                            role: selectedRole,
+                            position: value,
+                          })}
                           key={value}
                         >
                           {getDictName(item)}
@@ -127,7 +162,10 @@ export function HomeTabs({
                   <ButtonGroup aria-label="英雄定位筛选">
                     <ChampionFilterButton
                       active={!selectedRole}
-                      href={getChampionFilterHref({ basePath: championBasePath, position: selectedPosition })}
+                      href={getChampionFilterHref({
+                        basePath: championBasePath,
+                        position: selectedPosition,
+                      })}
                     >
                       全部
                     </ChampionFilterButton>
@@ -136,7 +174,11 @@ export function HomeTabs({
                       return value ? (
                         <ChampionFilterButton
                           active={selectedRole === value}
-                          href={getChampionFilterHref({ basePath: championBasePath, role: value, position: selectedPosition })}
+                          href={getChampionFilterHref({
+                            basePath: championBasePath,
+                            role: value,
+                            position: selectedPosition,
+                          })}
                           key={value}
                         >
                           {getDictName(item)}
@@ -153,15 +195,30 @@ export function HomeTabs({
                   </div>
                   <div className={`${styles.grid} ${styles.championGrid}`}>
                     {filteredChampions.map((champion) => {
-                      const imageUrl = normalizeImageUrl(champion.squarePortraitPath);
+                      const imageUrl = normalizeImageUrl(
+                        champion.squarePortraitPath,
+                      );
                       return (
-                        <Link className={`${styles.card} ${styles.compactCard}`} href={championPath(champion)} key={champion.heroId}>
+                        <Link
+                          className={`${styles.card} ${styles.compactCard}`}
+                          href={championPath(champion)}
+                          key={champion.heroId}
+                        >
                           <span className={styles.championAvatar}>
-                            {imageUrl ? <Image src={imageUrl} alt={`${champion.name} 国服头像`} fill sizes="42px" /> : null}
+                            {imageUrl ? (
+                              <Image
+                                src={imageUrl}
+                                alt={`${champion.name} 国服头像`}
+                                fill
+                                sizes="42px"
+                              />
+                            ) : null}
                           </span>
                           <span className={styles.championText}>
                             <strong>{champion.title ?? champion.name}</strong>
-                            <span>{champion.name ?? champion.nameEng ?? "英雄资料"}</span>
+                            <span>
+                              {champion.name ?? champion.nameEng ?? "英雄资料"}
+                            </span>
                           </span>
                         </Link>
                       );
@@ -169,7 +226,9 @@ export function HomeTabs({
                   </div>
                 </>
               ) : (
-                <div className={styles.empty}>公开接口暂未返回符合条件的英雄数据。</div>
+                <div className={styles.empty}>
+                  公开接口暂未返回符合条件的英雄数据。
+                </div>
               )}
             </CardContent>
           </Card>
@@ -181,7 +240,9 @@ export function HomeTabs({
               {universes.length > 0 ? (
                 <UniversesTree universes={universes} skinlines={skinlines} />
               ) : (
-                <div className={styles.empty}>公开接口暂未返回皮肤宇宙数据。</div>
+                <div className={styles.empty}>
+                  公开接口暂未返回皮肤宇宙数据。
+                </div>
               )}
             </CardContent>
           </Card>
@@ -193,7 +254,26 @@ export function HomeTabs({
               {skinlines.length > 0 ? (
                 <SkinlineList skinlines={skinlines} sort={skinlineSort} />
               ) : (
-                <div className={styles.empty}>公开接口暂未返回皮肤套装数据。</div>
+                <div className={styles.empty}>
+                  公开接口暂未返回皮肤套装数据。
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="prestige-chromas">
+          <Card>
+            <CardContent className="pt-6">
+              {prestigeChromas.length > 0 ? (
+                <PrestigeChromaList
+                  items={prestigeChromas}
+                  options={prestigeChromaOptions}
+                />
+              ) : (
+                <div className={styles.empty}>
+                  公开接口暂未返回臻彩原画数据。
+                </div>
               )}
             </CardContent>
           </Card>
@@ -203,7 +283,7 @@ export function HomeTabs({
           <Card>
             <CardContent className="pt-6">
               <div className={styles.comingGrid}>
-                {["臻彩原画", "召唤师头像", "表情", "守卫皮肤"].map((item) => (
+                {["召唤师头像", "表情", "守卫皮肤"].map((item) => (
                   <article className={styles.comingCard} key={item}>
                     <span>Next</span>
                     <h3>{item}</h3>
@@ -219,9 +299,22 @@ export function HomeTabs({
   );
 }
 
-function ChampionFilterButton({ active, href, children }: { active: boolean; href: string; children: React.ReactNode }) {
+function ChampionFilterButton({
+  active,
+  href,
+  children,
+}: {
+  active: boolean;
+  href: string;
+  children: React.ReactNode;
+}) {
   return (
-    <Button asChild className={active ? "bg-accent text-accent-foreground" : undefined} size="sm" variant="outline">
+    <Button
+      asChild
+      className={active ? "bg-accent text-accent-foreground" : undefined}
+      size="sm"
+      variant="outline"
+    >
       <Link href={href} aria-current={active ? "page" : undefined}>
         {children}
       </Link>

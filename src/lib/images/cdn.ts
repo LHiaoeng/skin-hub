@@ -29,12 +29,21 @@ function normalizeCommunityDragonPath(path: string) {
     return resourcePath;
   }
 
-  const assetPath = resourcePath.slice("lol-game-data/assets/".length).replace(/^ASSETS\//, "assets/");
+  const assetPath = resourcePath
+    .slice("lol-game-data/assets/".length)
+    .replace(/^ASSETS\//, "assets/");
   return `plugins/rcp-be-lol-game-data/global/default/${assetPath}`;
 }
 
-function withCommunityDragonVersion(path: string, version: CommunityDragonVersion, lang: CommunityDragonLang) {
-  const resourcePath = withCommunityDragonLang(normalizeCommunityDragonPath(path), lang);
+function withCommunityDragonVersion(
+  path: string,
+  version: CommunityDragonVersion,
+  lang: CommunityDragonLang,
+) {
+  const resourcePath = withCommunityDragonLang(
+    normalizeCommunityDragonPath(path),
+    lang,
+  );
   if (resourcePath.startsWith("pbe/") || resourcePath.startsWith("latest/")) {
     return resourcePath;
   }
@@ -42,7 +51,11 @@ function withCommunityDragonVersion(path: string, version: CommunityDragonVersio
   return `${version}/${resourcePath}`;
 }
 
-export function resolveResourceUrl(url: string | undefined, isPbeOnly?: number | boolean, lang: CommunityDragonLang = "default"): string {
+export function resolveResourceUrl(
+  url: string | undefined,
+  isPbeOnly?: number | boolean,
+  lang: CommunityDragonLang = "default",
+): string {
   const rawUrl = url?.trim();
   if (!rawUrl) {
     return "";
@@ -52,14 +65,25 @@ export function resolveResourceUrl(url: string | undefined, isPbeOnly?: number |
     return `https:${rawUrl}`;
   }
 
-  if (hasUrlProtocol(rawUrl) || rawUrl.startsWith("./") || rawUrl.startsWith("../")) {
+  if (
+    hasUrlProtocol(rawUrl) ||
+    rawUrl.startsWith("./") ||
+    rawUrl.startsWith("../")
+  ) {
     return rawUrl;
   }
 
   const resourcePath = rawUrl.replace(/\\/g, "/").replace(/^\/+/, "");
-  return joinUrl(COMMUNITY_DRAGON_DOMAIN, withCommunityDragonVersion(resourcePath, resolveVersion(isPbeOnly), lang));
+  return joinUrl(
+    COMMUNITY_DRAGON_DOMAIN,
+    withCommunityDragonVersion(resourcePath, resolveVersion(isPbeOnly), lang),
+  );
 }
 
-export function normalizeImageUrl(path: string | undefined, isPbeOnly?: number | boolean, lang: CommunityDragonLang = "default"): string | undefined {
+export function normalizeImageUrl(
+  path: string | undefined,
+  isPbeOnly?: number | boolean,
+  lang: CommunityDragonLang = "default",
+): string | undefined {
   return resolveResourceUrl(path, isPbeOnly, lang) || undefined;
 }

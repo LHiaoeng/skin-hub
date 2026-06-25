@@ -20,7 +20,10 @@ export function parseSkinlineSort(searchParams?: {
   };
 }
 
-export function sortSkinlines(skinlines: SkinlineSummary[], sort: SkinlineSort): SkinlineSummary[] {
+export function sortSkinlines(
+  skinlines: SkinlineSummary[],
+  sort: SkinlineSort,
+): SkinlineSummary[] {
   const direction = sort.order === "asc" ? 1 : -1;
   return [...skinlines].sort((left, right) => {
     if (sort.key === "count") {
@@ -33,7 +36,9 @@ export function sortSkinlines(skinlines: SkinlineSummary[], sort: SkinlineSort):
     }
 
     const nameComparison = compareName(left.name, right.name) * direction;
-    return nameComparison !== 0 ? nameComparison : left.riotSkinlineId - right.riotSkinlineId;
+    return nameComparison !== 0
+      ? nameComparison
+      : left.riotSkinlineId - right.riotSkinlineId;
   });
 }
 

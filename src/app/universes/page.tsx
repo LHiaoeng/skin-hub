@@ -6,10 +6,12 @@ export const revalidate = 86400;
 
 export const metadata: Metadata = {
   title: "皮肤宇宙 - Skin Hub",
-  description: "浏览英雄联盟全部皮肤宇宙，了解每个宇宙包含的皮肤系列与关联内容。",
+  description:
+    "浏览英雄联盟全部皮肤宇宙，了解每个宇宙包含的皮肤系列与关联内容。",
   openGraph: {
     title: "皮肤宇宙 - Skin Hub",
-    description: "浏览英雄联盟全部皮肤宇宙，了解每个宇宙包含的皮肤系列与关联内容。",
+    description:
+      "浏览英雄联盟全部皮肤宇宙，了解每个宇宙包含的皮肤系列与关联内容。",
   },
 };
 

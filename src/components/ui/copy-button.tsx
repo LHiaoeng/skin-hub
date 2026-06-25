@@ -38,9 +38,17 @@ export function CopyButton({
       aria-label={copied ? "复制成功" : label}
     >
       {copied ? (
-        <Check aria-hidden="true" data-icon="inline-end" style={{ width: "1em", height: "1em" }} />
+        <Check
+          aria-hidden="true"
+          data-icon="inline-end"
+          style={{ width: "1em", height: "1em" }}
+        />
       ) : (
-        <Copy aria-hidden="true" data-icon="inline-end" style={{ width: "1em", height: "1em" }} />
+        <Copy
+          aria-hidden="true"
+          data-icon="inline-end"
+          style={{ width: "1em", height: "1em" }}
+        />
       )}
     </Button>
   );

@@ -14,15 +14,40 @@ export function websiteSchema(siteUrl: string) {
   };
 }
 
-export function skinImageSchema(skin: Skin, imageUrl: string | undefined, pageUrl: string) {
+export function imageObjectSchema({
+  name,
+  imageUrl,
+  pageUrl,
+  description,
+}: {
+  name: string;
+  imageUrl: string | undefined;
+  pageUrl: string;
+  description: string;
+}) {
   return {
     "@context": "https://schema.org",
     "@type": "ImageObject",
-    name: `${skin.name} 皮肤原画`,
+    name,
     contentUrl: imageUrl,
     url: pageUrl,
-    description: skin.description ?? `${skin.name} 的 LOL 皮肤详情、稀有度、系列和上线时间。`,
+    description,
   };
+}
+
+export function skinImageSchema(
+  skin: Skin,
+  imageUrl: string | undefined,
+  pageUrl: string,
+) {
+  return imageObjectSchema({
+    name: `${skin.name} 皮肤原画`,
+    imageUrl,
+    pageUrl,
+    description:
+      skin.description ??
+      `${skin.name} 的 LOL 皮肤详情、稀有度、系列和上线时间。`,
+  });
 }
 
 export function breadcrumbSchema(items: Array<{ name: string; url: string }>) {

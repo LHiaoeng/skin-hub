@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 export type Theme = "dark" | "light" | "system";
 
@@ -13,14 +21,18 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 function getSystemTheme(): "dark" | "light" {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
 }
 
 function getInitialTheme(): Theme {
   if (typeof window === "undefined") return "dark";
 
   const storedTheme = localStorage.getItem("theme");
-  return storedTheme === "light" || storedTheme === "system" ? storedTheme : "dark";
+  return storedTheme === "light" || storedTheme === "system"
+    ? storedTheme
+    : "dark";
 }
 
 function applyTheme(theme: Theme): "dark" | "light" {
@@ -52,9 +64,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setResolvedTheme(applyTheme(nextTheme));
   }, []);
 
-  const value = useMemo(() => ({ theme, resolvedTheme, setTheme }), [resolvedTheme, setTheme, theme]);
+  const value = useMemo(
+    () => ({ theme, resolvedTheme, setTheme }),
+    [resolvedTheme, setTheme, theme],
+  );
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {

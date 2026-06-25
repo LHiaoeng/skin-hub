@@ -7,6 +7,8 @@
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-secondary: hsl(var(--secondary));
@@ -26,6 +28,8 @@
     --foreground: 213 33% 13%;
     --card: 0 0% 100%;
     --card-foreground: 213 33% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 33% 13%;
     --primary: 194 100% 28%;
     --primary-foreground: 0 0% 98%;
     --secondary: 210 24% 91%;
@@ -45,6 +49,8 @@
     --foreground: 203 42% 96%;
     --card: 213 35% 10%;
     --card-foreground: 203 42% 96%;
+    --popover: 213 35% 10%;
+    --popover-foreground: 203 42% 96%;
     --primary: 192 83% 62%;
     --primary-foreground: 213 35% 10%;
     --secondary: 214 28% 16%;
@@ -71,10 +77,21 @@
   body {
     min-height: 100vh;
     margin: 0;
+    font-family:
+      "Noto Sans SC", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB",
+      system-ui, sans-serif;
     color: hsl(var(--foreground));
     background:
-      radial-gradient(circle at 18% 0%, hsl(var(--primary) / 0.18), transparent 34rem),
-      radial-gradient(circle at 86% 8%, hsl(var(--accent-strong) / 0.14), transparent 28rem),
+      radial-gradient(
+        circle at 18% 0%,
+        hsl(var(--primary) / 0.18),
+        transparent 34rem
+      ),
+      radial-gradient(
+        circle at 86% 8%,
+        hsl(var(--accent-strong) / 0.14),
+        transparent 28rem
+      ),
       hsl(var(--background));
   }
 
@@ -84,8 +101,13 @@
     z-index: -1;
     pointer-events: none;
     content: "";
-    background-image: linear-gradient(hsl(var(--foreground) / 0.035) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--foreground) / 0.035) 1px, transparent 1px);
+    background-image:
+      linear-gradient(hsl(var(--foreground) / 0.035) 1px, transparent 1px),
+      linear-gradient(
+        90deg,
+        hsl(var(--foreground) / 0.035) 1px,
+        transparent 1px
+      );
     background-size: 36px 36px;
     mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.85), transparent 75%);
   }
@@ -193,7 +215,9 @@
   border: 1px solid hsl(var(--border));
   border-radius: 22px;
   background: hsl(var(--card));
-  transition: transform 160ms ease, border-color 160ms ease;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease;
 }
 
 .skin-card:hover {

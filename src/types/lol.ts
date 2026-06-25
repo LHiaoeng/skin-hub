@@ -136,9 +136,33 @@ export interface HomeData {
   featuredChampions: Champion[];
   skinlines: Skinline[];
   universes: Universe[];
+  prestigeChromas: PrestigeChroma[];
   dictionaries: LolDictionaries;
 }
 
 export interface HomePageData extends Omit<HomeData, "skinlines"> {
   skinlines: SkinlineSummary[];
+}
+
+export interface PrestigeChromaRelation {
+  id: number;
+  name: string;
+  description?: string;
+}
+
+export interface PrestigeChroma {
+  heroId: number;
+  heroName: string;
+  skinId: number;
+  itemName: string;
+  instanceId?: string;
+  rank: number;
+  startTime?: string;
+  endTime?: string;
+  startDate?: string;
+  cid?: string;
+  cname?: string;
+  timgUrl?: string;
+  skinLines: PrestigeChromaRelation[];
+  universes: PrestigeChromaRelation[];
 }

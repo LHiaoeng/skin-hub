@@ -2,6 +2,7 @@ import type {
   Champion,
   HomePageData,
   LolDictionaries,
+  PrestigeChroma,
   Skin,
   SkinDictItem,
   SkinlineSummary,
@@ -10,6 +11,7 @@ import type {
   UniverseDetail,
 } from "@/types/lol";
 import { skinlineDetailPath } from "@/lib/api/skinline-contract";
+import { fetchPrestigeChromas } from "@/lib/lol/prestige-chroma";
 
 const backendBaseUrl = process.env.BACKEND_BASE_URL ?? "http://localhost:9527";
 
@@ -45,7 +47,10 @@ const LOL_DICT_CODES = [
   "lol_champion_position",
 ] as const;
 
-async function request<T>(path: string, revalidate: number): Promise<T | undefined> {
+async function request<T>(
+  path: string,
+  revalidate: number,
+): Promise<T | undefined> {
   try {
     const response = await fetch(`${backendBaseUrl}${path}`, {
       next: { revalidate },
@@ -53,7 +58,9 @@ async function request<T>(path: string, revalidate: number): Promise<T | undefin
 
     if (!response.ok) {
       if (response.status !== 404) {
-        console.error(`[backend-client] ${path} returned HTTP ${response.status}.`);
+        console.error(
+          `[backend-client] ${path} returned HTTP ${response.status}.`,
+        );
       }
       return undefined;
     }
@@ -66,7 +73,10 @@ async function request<T>(path: string, revalidate: number): Promise<T | undefin
   }
 }
 
-async function requestFirst<T>(paths: string[], revalidate: number): Promise<T | undefined> {
+async function requestFirst<T>(
+  paths: string[],
+  revalidate: number,
+): Promise<T | undefined> {
   for (const path of paths) {
     const result = await request<T>(path, revalidate);
     if (result !== undefined) {
@@ -84,7 +94,11 @@ function unwrapPayload<T>(payload: unknown): T | undefined {
 
   const objectPayload = payload as Record<string, unknown>;
 
-  if ("code" in objectPayload && objectPayload.code !== 0 && objectPayload.code !== 200) {
+  if (
+    "code" in objectPayload &&
+    objectPayload.code !== 0 &&
+    objectPayload.code !== 200
+  ) {
     return undefined;
   }
 
@@ -111,11 +125,16 @@ function isPageResult<T>(value: T | PageResult<T>): value is PageResult<T> {
   return (
     typeof value === "object" &&
     value !== null &&
-    ("records" in value || "list" in value || "rows" in value || "data" in value)
+    ("records" in value ||
+      "list" in value ||
+      "rows" in value ||
+      "data" in value)
   );
 }
 
-function toSearchParams(params: Record<string, string | number | undefined>): string {
+function toSearchParams(
+  params: Record<string, string | number | undefined>,
+): string {
   const searchParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
@@ -128,11 +147,19 @@ function toSearchParams(params: Record<string, string | number | undefined>): st
 }
 
 export async function getHomeData(): Promise<HomePageData> {
-  const [latestSkins, champions, skinlines, universes, dictionaries] = await Promise.all([
+  const [
+    latestSkins,
+    champions,
+    skinlines,
+    universes,
+    prestigeChromas,
+    dictionaries,
+  ] = await Promise.all([
     getSkins({ size: 12, isPbeOnly: 1 }),
     getChampions(),
     getSkinlines(),
     getUniverses(),
+    getPrestigeChromas(),
     getLolDictionaries(),
   ]);
 
@@ -141,15 +168,27 @@ export async function getHomeData(): Promise<HomePageData> {
     featuredChampions: champions,
     skinlines,
     universes,
+    prestigeChromas,
     dictionaries,
   };
 }
 
-export async function getLolDictionaries(revalidate = 3600): Promise<LolDictionaries> {
-  const searchParams = new URLSearchParams();
-  LOL_DICT_CODES.forEach((dictCode) => searchParams.append("dictCodes", dictCode));
+export async function getPrestigeChromas(): Promise<PrestigeChroma[]> {
+  return fetchPrestigeChromas(fetch, backendBaseUrl);
+}
 
-  const dictList = await request<DictData[]>(`/rest/dict/data?${searchParams.toString()}`, revalidate);
+export async function getLolDictionaries(
+  revalidate = 3600,
+): Promise<LolDictionaries> {
+  const searchParams = new URLSearchParams();
+  LOL_DICT_CODES.forEach((dictCode) =>
+    searchParams.append("dictCodes", dictCode),
+  );
+
+  const dictList = await request<DictData[]>(
+    `/rest/dict/data?${searchParams.toString()}`,
+    revalidate,
+  );
 
   return {
     cnRarity: findDictItems(dictList, "lol_skin_rarity_cn"),
@@ -217,8 +256,13 @@ export async function getChampions(): Promise<Champion[]> {
   return unwrapList(result);
 }
 
-export async function getChampion(heroId: number): Promise<Champion | undefined> {
-  const detail = await requestFirst<Champion>([`/rest/lol/champions/${heroId}`], 86400);
+export async function getChampion(
+  heroId: number,
+): Promise<Champion | undefined> {
+  const detail = await requestFirst<Champion>(
+    [`/rest/lol/champions/${heroId}`],
+    86400,
+  );
   if (detail) {
     return detail;
   }
@@ -227,7 +271,10 @@ export async function getChampion(heroId: number): Promise<Champion | undefined>
   return champions.find((champion) => champion.heroId === heroId);
 }
 
-export async function getChampionSkins(championId: number, revalidate = 3600): Promise<Skin[]> {
+export async function getChampionSkins(
+  championId: number,
+  revalidate = 3600,
+): Promise<Skin[]> {
   return getSkins({
     championId,
     size: 100,
@@ -236,41 +283,60 @@ export async function getChampionSkins(championId: number, revalidate = 3600): P
 }
 
 export async function getSkinlines(): Promise<SkinlineSummary[]> {
-  const result = await request<SkinlineSummary[] | PageResult<SkinlineSummary>>("/rest/lol/skinlines", 86400);
+  const result = await request<SkinlineSummary[] | PageResult<SkinlineSummary>>(
+    "/rest/lol/skinlines",
+    86400,
+  );
   const skinlines = unwrapList(result);
   skinlines.forEach(assertValidSkinlineSummary);
 
   return skinlines;
 }
 
-export async function getSkinline(riotSkinlineId: number): Promise<SkinlineDetail | undefined> {
-  const detail = await request<SkinlineDetail>(skinlineDetailPath(riotSkinlineId), 86400);
+export async function getSkinline(
+  riotSkinlineId: number,
+): Promise<SkinlineDetail | undefined> {
+  const detail = await request<SkinlineDetail>(
+    skinlineDetailPath(riotSkinlineId),
+    86400,
+  );
   if (!detail) {
     return undefined;
   }
   assertValidSkinlineSummary(detail);
-  if (!Array.isArray(detail.skins) || detail.skins.length !== detail.skinCount) {
-    throw new Error(`[backend-client] Invalid skinline detail contract for ${riotSkinlineId}.`);
+  if (
+    !Array.isArray(detail.skins) ||
+    detail.skins.length !== detail.skinCount
+  ) {
+    throw new Error(
+      `[backend-client] Invalid skinline detail contract for ${riotSkinlineId}.`,
+    );
   }
   return detail;
 }
 
 export async function getUniverses(): Promise<Universe[]> {
   const result = await requestFirst<Universe[] | PageResult<Universe>>(
-    ["/rest/lol/universes?page=1&size=200", "/lol/universe/page?page=1&size=200"],
+    [
+      "/rest/lol/universes?page=1&size=200",
+      "/lol/universe/page?page=1&size=200",
+    ],
     86400,
   );
 
   return unwrapList(result);
 }
 
-export async function getUniverse(lolUniverseId: number): Promise<UniverseDetail | undefined> {
+export async function getUniverse(
+  lolUniverseId: number,
+): Promise<UniverseDetail | undefined> {
   const [detail, universes, allSkinlines] = await Promise.all([
     requestFirst<Universe>([`/rest/lol/universes/${lolUniverseId}`], 86400),
     getUniverses(),
     getSkinlines(),
   ]);
-  const universe = detail ?? universes.find((item) => item.lolUniverseId === lolUniverseId);
+  const universe =
+    detail ?? universes.find((item) => item.lolUniverseId === lolUniverseId);
 
   if (!universe) {
     return undefined;
@@ -284,8 +350,7 @@ export async function getUniverse(lolUniverseId: number): Promise<UniverseDetail
     relatedSkinlines.map(async (skinline) => ({
       ...skinline,
       skins:
-        skinline.skins ??
-        (await getSkinlineSkins(skinline.riotSkinlineId)),
+        skinline.skins ?? (await getSkinlineSkins(skinline.riotSkinlineId)),
     })),
   );
 
@@ -306,13 +371,25 @@ async function getSkinlineSkins(skinlineId: number): Promise<Skin[]> {
   );
   const firstRecords = unwrapList(firstPage);
 
-  if (!firstPage || Array.isArray(firstPage) || !firstPage.total || firstPage.total <= pageSize) {
+  if (
+    !firstPage ||
+    Array.isArray(firstPage) ||
+    !firstPage.total ||
+    firstPage.total <= pageSize
+  ) {
     return firstRecords;
   }
 
   const remainingPages = await Promise.all(
-    Array.from({ length: Math.ceil(firstPage.total / pageSize) - 1 }, (_, index) =>
-      getSkins({ page: index + 2, size: pageSize, skinlineId, revalidate: 3600 }),
+    Array.from(
+      { length: Math.ceil(firstPage.total / pageSize) - 1 },
+      (_, index) =>
+        getSkins({
+          page: index + 2,
+          size: pageSize,
+          skinlineId,
+          revalidate: 3600,
+        }),
     ),
   );
   return [...firstRecords, ...remainingPages.flat()];
@@ -320,7 +397,9 @@ async function getSkinlineSkins(skinlineId: number): Promise<Skin[]> {
 
 function assertValidSkinlineSummary(skinline: SkinlineSummary) {
   if (!Number.isInteger(skinline.skinCount) || skinline.skinCount < 0) {
-    throw new Error(`[backend-client] Invalid skinCount for skinline ${skinline.riotSkinlineId}.`);
+    throw new Error(
+      `[backend-client] Invalid skinCount for skinline ${skinline.riotSkinlineId}.`,
+    );
   }
 }
 

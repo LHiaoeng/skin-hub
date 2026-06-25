@@ -51,19 +51,20 @@
 
 ## 6. 页面规划与当前状态
 
-| 页面 | 路由 | 目标渲染策略 | 当前状态 | 需求说明 |
-| --- | --- | --- | --- | --- |
-| 首页 | `/` | ISR | 已落地 | 聚合 PBE 新增皮肤、英雄入口、皮肤系列、皮肤宇宙。 |
-| 皮肤列表 | `/skins` | SSR/ISR | 已落地轻量版，待调整 | 承载皮肤列表浏览，可按上线时间、皮肤品质、皮肤徽章等维度分组显示。 |
-| 皮肤详情 | `/skins/[skinId]` | SSG/ISR | 已落地 | 服务端渲染皮肤主体信息、原画、加载图、基础信息、系列信息、JSON-LD。 |
-| 英雄列表 | `/champions` | SSG/ISR | 已落地 | 复用首页英雄入口内容，支持 `role`、`position` query 筛选。 |
-| 英雄详情 | `/champions/[championId]` | SSG/ISR | 已落地，待按参考图调整 | 参考 `docs/images/championDetail.png`，展示英雄主体信息与该英雄皮肤卡片列表。 |
-| 皮肤系列列表 | `/skinlines` | SSG/ISR | 已落地入口页 | 复用聚合页入口内容。 |
-| 皮肤系列详情 | `/skinlines/[skinlineId]` | SSG/ISR | 已落地 | 展示同系列皮肤、描述、关联宇宙，参照英雄详情页皮肤列表模式。 |
-| 皮肤宇宙列表 | `/universes` | SSG/ISR | 已落地入口页 | 复用聚合页入口内容。 |
-| 皮肤宇宙详情 | `/universes/[universeId]` | SSG/ISR | 已落地 | 聚合多个系列与皮肤，参照英雄详情页皮肤列表模式。 |
-| 神话商店 | `/mythic-shop` | SSR/ISR | 待开发 | 展示当前轮换、历史出现次数。 |
-| 臻彩藏品 | `/prestige-chromas` | ISR | 待开发 | 展示臻彩列表与更新记录。 |
+| 页面         | 路由                         | 目标渲染策略 | 当前状态               | 需求说明                                                                      |
+| ------------ | ---------------------------- | ------------ | ---------------------- | ----------------------------------------------------------------------------- |
+| 首页         | `/`                          | ISR          | 已落地                 | 聚合 PBE 新增皮肤、英雄入口、皮肤系列、皮肤宇宙和臻彩原画入口。               |
+| 皮肤列表     | `/skins`                     | SSR/ISR      | 已落地轻量版，待调整   | 承载皮肤列表浏览，可按上线时间、皮肤品质、皮肤徽章等维度分组显示。            |
+| 皮肤详情     | `/skins/[skinId]`            | SSG/ISR      | 已落地                 | 服务端渲染皮肤主体信息、原画、加载图、基础信息、系列信息、JSON-LD。           |
+| 英雄列表     | `/champions`                 | SSG/ISR      | 已落地                 | 复用首页英雄入口内容，支持 `role`、`position` query 筛选。                    |
+| 英雄详情     | `/champions/[championId]`    | SSG/ISR      | 已落地，待按参考图调整 | 参考 `docs/images/championDetail.png`，展示英雄主体信息与该英雄皮肤卡片列表。 |
+| 皮肤系列列表 | `/skinlines`                 | SSG/ISR      | 已落地入口页           | 复用聚合页入口内容。                                                          |
+| 皮肤系列详情 | `/skinlines/[skinlineId]`    | SSG/ISR      | 已落地                 | 展示同系列皮肤、描述、关联宇宙，参照英雄详情页皮肤列表模式。                  |
+| 皮肤宇宙列表 | `/universes`                 | SSG/ISR      | 已落地入口页           | 复用聚合页入口内容。                                                          |
+| 皮肤宇宙详情 | `/universes/[universeId]`    | SSG/ISR      | 已落地                 | 聚合多个系列与皮肤，参照英雄详情页皮肤列表模式。                              |
+| 神话商店     | `/mythic-shop`               | SSR/ISR      | 待开发                 | 展示当前轮换、历史出现次数。                                                  |
+| 臻彩原画     | `/prestige-chromas`          | ISR          | 已落地入口页           | 作为首页路由级 Tab 展示臻彩原画列表，点击进入独立详情页；更新记录后续补充。   |
+| 臻彩详情     | `/prestige-chromas/[skinId]` | SSG/ISR      | 已落地                 | 复用全屏原画查看器，输出臻彩专属详情与独立 SEO 信息。                         |
 
 ## 7. URL 规则
 
@@ -73,6 +74,7 @@
   - `/champions/103-ahri`
   - `/skinlines/40-spirit-blossom`
   - `/universes/12-star-guardian`
+  - `/prestige-chromas/1234-prestige-chroma-name`
 - 服务端解析时以 ID 为准，slug 只用于可读性；slug 变化时可 301 到新地址。
 
 ## 8. 数据与接口
@@ -279,7 +281,6 @@ BACKEND_BASE_URL=http://localhost:9527
 - `/skins` 皮肤列表按上线时间、皮肤品质、皮肤徽章分组时，各分组的默认排序、分页方式和 SEO 索引策略待确认。
 - Header 全局搜索结果的接口返回字段、排序规则、分组规则和空状态文案待确认。
 - 神话商店页面的缓存时间是否完全由商品结束时间决定，还是需要后端提供统一刷新时间。
-- 臻彩藏品页是否需要独立详情页或仅列表聚合页。
 - 图片代理 `/api/image-proxy` 的允许域名清单和失败占位策略。
 - TeamCity CI/CD 的实际包管理器使用 `npm`、`pnpm` 还是按环境统一配置。
 
@@ -384,6 +385,9 @@ BACKEND_BASE_URL=http://localhost:9527
 - 炫彩项展示炫彩图、名称、颜色色板和描述；有稀有度或来源说明时一并展示。原皮与炫彩缩略图优先使用 `chromaPath`，缺失时依次使用 `loadScreenVintagePath`、`loadScreenPath`，缩略图容器尺寸固定为 270×303，图片完整显示且不裁剪。
 - 炫彩颜色统一使用全局通用的图片式圆形色板组件展示，原皮或无颜色时显示斜杠圆形图片，单色为实心圆，多色为分区圆形图片；色值需要去重，`ChromaColorSwatch` 组件内置 Popover 展示颜色值并支持复制。Popover 使用 hover 打开，复制色值后保持显示，离开色板与 Popover 区域后隐藏；鼠标移入色值 Popover 时底部轮播栏需要保持显示。缩略图中的色板需要更醒目并在缩略图底部居中展示。
 - 点击炫彩缩略图在当前页面内替换主视觉图片或视频，不跳转到新的详情页。
+- 皮肤详情页支持通过 `/skins/{skinId}-{slug}?chroma={chromaId}` 精确显示当前皮肤下的指定炫彩；`chromaId` 必须匹配当前皮肤合并、去重后的炫彩数据，缺失参数时显示原皮，无效、重复或不属于当前皮肤的参数按原皮显示并从地址栏移除，不返回 404。
+- 点击缩略图、点击色板或使用移动端手势切换炫彩时，通过替换当前历史记录同步更新 `chroma` 查询参数；切回原皮时移除该参数，同时保留 URL 中其他查询参数。
+- `chroma` 仅用于页面展示状态，不形成独立 SEO 页面；canonical、Open Graph 和 JSON-LD 继续使用不含 `chroma` 参数的原皮正式 URL。
 - 炫彩缩略图栏内容未超出容器宽度时静态居中展示；超出容器宽度时使用前端 UI 组件库的 Carousel/Embla 轮播能力无限 loop，不自动滚动，在轮播栏两端展示切换按钮，并支持鼠标滚轮切换上一组/下一组；轮播最大宽度以完整展示 3 个 270×303 缩略图为准，卡片间距使用 `gap` 控制，并保留左右等距留白；展示组件整体居中；底部中间常显与轮播项数量一致的色板索引并贴近屏幕底部边缘，使用 shadcn `ButtonGroup` + `Button` 的 `outline` 形态和 `sm` 尺寸，外层不展示额外背景容器；分页按钮视觉与页面其他操作按钮一致，跟随鼠标闲置、活动和 hover 三档亮度；色板不拆分颜色、不显示 Popover，点击色板可切换对应原皮或炫彩，并同步将对应缩略图移动到轮播中间，不能遮挡轮播底部皮肤名称。
 - 轮播底部皮肤名称需要居中展示，字号大于辅助说明文字；名称 hover 时使用 Popover 展示完整名称，并提供复制按钮。
 - 如果返回 `skinAugments`，页面需要为后续展示边框、签名版叠层、特殊叠图预留数据结构；首期可先不渲染复杂叠层，但不能丢失接口字段设计。
@@ -455,8 +459,8 @@ BACKEND_BASE_URL=http://localhost:9527
 
 ### 23.6 SEO 与结构化数据
 
-- 页面需要生成唯一 	itle、description、canonical、Open Graph 信息。
-- 	itle 示例如"皮肤宇宙 - Skin Hub"，description 使用概括性描述。
+- 页面需要生成唯一 itle、description、canonical、Open Graph 信息。
+-     itle 示例如"皮肤宇宙 - Skin Hub"，description 使用概括性描述。
 - 页面输出 CollectionPage JSON-LD。
 - 面包屑至少包含：首页、皮肤宇宙。
 - 页面需要收录到 sitemap.xml 中。
@@ -471,7 +475,7 @@ BACKEND_BASE_URL=http://localhost:9527
 
 - GET /rest/lol/universes 列表接口需要确认返回字段:
   - 宇宙基本信息: id、lolUniverseId、
-ame、engName、imagePath。
+    ame、engName、imagePath。
   - 关联系列列表: 至少包含系列 ID、名称、英文名。
   - 每个关联系列关联的皮肤数量（可选）。
 - 如果宇宙列表接口返回的数据不含关联系列信息，前端可通过 GET /rest/lol/skinlines 接口按宇宙 ID 过滤或全量加载后进行客户端关联。
@@ -484,8 +488,8 @@ ame、engName、imagePath。
 - 主内容采用 shadcn File Tree 样式展示，每个宇宙为树节点，默认全部展开。
 - 每个宇宙节点下列出该宇宙所属的皮肤系列。
 - 排序支持按名称和按套装数量两种维度。
-- 图片资源继续复用 src/lib/images 的 CommunityDragon/CDN 处理逻辑，新增远程域名时同步检查 
-ext.config.ts。
+- 图片资源继续复用 src/lib/images 的 CommunityDragon/CDN 处理逻辑，新增远程域名时同步检查
+  ext.config.ts。
 - 列表数据全量服务端获取，首屏 SSR 输出。
 
 ### 23.10 待确认问题
@@ -497,23 +501,29 @@ ext.config.ts。
 
 ### 23.11 全局共享的 Tab 导航架构
 
-- /、/universes、/skinlines、/coming 四个页面共享同一套 HomeTabs 组件作为全局 tab 导航。
+- /、/universes、/skinlines、/prestige-chromas、/coming 五个页面共享同一套 HomeTabs 组件作为全局 tab 导航。
 - 页面结构统一为：
   1. **PBE 新增**：全局固定区域，不随 tab 切换而变化，展示于首页 HomeContent 顶部。
   2. **Tab 导航条**：使用 shadcn Tabs 组件（TabsList + TabsTrigger asChild + Link）实现路由级切换，URL 随 tab 变化。
   3. **Tab 内容区**：各 tab 内容包裹在 TabsContent + Card + CardContent 中。
 - 各 tab 路由与内容对应关系：
 
-  | 路由 | tab | 内容组件 |
-  |------|-----|---------|
-  | / 或 /champions | 英雄 | 英雄列表 + 筛选 |
-  | /universes | 皮肤宇宙 | UniversesTree（瀑布流卡片 + 内部 File Tree） |
-  | /skinlines | 皮肤套装 | 系列卡片网格 |
-  | /coming | 后续内容 | 占位卡片 |
+  | 路由              | tab      | 内容组件                                     |
+  | ----------------- | -------- | -------------------------------------------- |
+  | / 或 /champions   | 英雄     | 英雄列表 + 筛选                              |
+  | /universes        | 皮肤宇宙 | UniversesTree（瀑布流卡片 + 内部 File Tree） |
+  | /skinlines        | 皮肤套装 | 系列卡片网格                                 |
+  | /prestige-chromas | 臻彩原画 | 臻彩原画卡片网格 + 分组/排序控制             |
+  | /coming           | 后续内容 | 占位卡片                                     |
 
 - HomeTabs 通过 activeTab prop 从 HomeContent 接收当前激活的 tab，Tabs defaultValue 跟随 activeTab 使初始化状态正确。
 - Tab 的名称、路由与图标统一由 `src/lib/navigation/content-sections.ts` 配置维护，首页及各列表页面复用同一配置，避免出现多处图标事实源。
-- 图标语义统一为：英雄使用用户、皮肤宇宙使用轨道、皮肤套装使用地球、后续内容使用闪光；后续调整只修改共享配置。
+- 图标语义统一为：英雄使用用户、皮肤宇宙使用轨道、皮肤套装使用地球、臻彩原画使用调色板、后续内容使用闪光；Tab 与臻彩原画分组按钮均从 `src/lib/navigation/content-sections.ts` 读取共享图标配置，后续调整只修改共享配置。
+- 臻彩原画 Tab 支持「所有」不分组展示，以及按英雄、皮肤宇宙、皮肤套装分组展示；分组选项顺序固定为「所有、英雄、皮肤宇宙、皮肤套装」；默认选择「所有」并直接输出卡片网格，不展示分组标题。
+- 点击「所有」时需要清空数量排序等分组相关条件，只保留不分组列表所需的上线时间排序。
+- 「臻彩分类」作为筛选条件展示在排序控件的「数量」后面，分类来源为接口 `cid/cname`；筛选条件只过滤列表，不作为分组选项。
+- 臻彩原画 Tab 的「上线时间」排序实际使用接口 `rank` 字段；默认按 `rank` 降序排序，支持升序/降序切换，排序控件展示方式参考皮肤套装列表页。
+- 臻彩原画 Tab 选择任意分组时，同时提供「数量」排序选项，用于按分组内臻彩数量升序/降序排列分组；组内卡片仍按 `rank` 排序。
 - 共享图标除 Tab 外，同步用于对应分类的详情页面包屑；详情页大标题不展示分类图标。
 - 全局 Header 提供返回上一页图标按钮，详情内容区不重复展示返回列表链接；无浏览历史时返回首页。
 - 详情页面包屑每个层级均展示语义图标：首页使用 Home，分类及动态层级使用共享内容图标；最后一个当前页层级提供名称复制按钮。
@@ -535,6 +545,7 @@ ext.config.ts。
 - 宇宙与套装详情页的英文名称后提供复制按钮；存在英文描述时，英文名称整行作为 shadcn Hover Card 触发区域，卡片标题展示英文名称、内容展示英文描述。
 - 英雄详情页遵循相同英文名称 Hover Card 规则；英雄接口可选返回 `engDescription`，缺失时仅展示英文名称与复制按钮。
 - 此架构确保所有列表页的首屏 SSR 输出、SEO 元数据和面包屑导航的一致性，并通过 HomeContent 统一管理 PBE 新增数据与 tab 数据的拉取。
+
 ## 24. 宇宙详情页调研需求
 
 调研参考页：https://splash.buguoguo.cn/universes/12-star-guardian（星之守护者宇宙），仅作为信息架构参考。
@@ -612,7 +623,7 @@ ext.config.ts。
 
 ### 24.8 视觉与明暗模式
 
-- 页面支持明暗模式，结构与英雄详情页 CSS 变量模式一致，直接复用 --champion-* 变量体系，遮罩色值根据宇宙背景图特征独立微调。
+- 页面支持明暗模式，结构与英雄详情页 CSS 变量模式一致，直接复用 --champion-\* 变量体系，遮罩色值根据宇宙背景图特征独立微调。
 - 背景图上方叠加渐变遮罩层，保证文字在明暗模式下均可读。
 - 皮肤卡片区域使用与英雄详情页相同的透明面板和毛玻璃效果。
 
@@ -621,7 +632,7 @@ ext.config.ts。
 - [已确认] 宇宙详情接口需要后端新增 GET /rest/lol/universes/{lolUniverseId}，返回完整结构化关联系列与皮肤数据，避免逗号分隔 ID 集合。
 - [已确认] 宇宙背景降级方案：优先 universe.imagePath；无则取第一个关联系列的首款皮肤 splashPath；无则不设背景图；背景图一旦设置不随排序变动。
 - [已确认] 宇宙下关联皮肤列表全量展示，不需要分页或虚拟滚动。
-- [已确认] 明暗模式直接复用英雄详情页 --champion-* 变量体系，遮罩色值根据宇宙背景图特征独立微调。
+- [已确认] 明暗模式直接复用英雄详情页 --champion-\* 变量体系，遮罩色值根据宇宙背景图特征独立微调。
 
 ### 24.10 实现状态
 
@@ -759,3 +770,48 @@ ext.config.ts。
 - [已落地] Redis 分组缓存设置 6 小时 TTL；未命中时从数据库重建，Redis 异常时记录日志并降级到数据库，数据库异常继续显式失败。
 - [已落地] 皮肤同步在事务提交后按同步前后套装 ID 并集主动刷新缓存。
 - [已落地] `/skinlines` 使用 shadcn `Item`、URL 排序参数和 3/2/1 响应式网格；详情页只消费套装详情接口，不再拼装皮肤分页结果。
+
+## 27. 臻彩独立详情页
+
+### 27.1 页面目标与路由
+
+- 臻彩建立独立详情页，正式路由为 `/prestige-chromas/{skinId}-{slug}`；其中 `skinId` 是 `/rest/lol/prestige-chromas` 返回的臻彩唯一 ID，`slug` 由 `itemName` 生成。
+- `/rest/lol/prestige-chromas` 不再返回独立 `chromaId`；前后端不得为臻彩详情页新增或依赖该字段。
+- 服务端以 `skinId` 为唯一匹配依据；slug 仅用于可读性，非规范 slug 永久重定向到当前 `itemName` 对应的规范地址。
+- 臻彩详情页复用现有全屏皮肤原画查看体验，同时在详情抽屉中输出臻彩专属、服务端可索引的正文内容。
+- `/skins/{skinId}-{slug}?chroma={chromaId}` 继续用于普通皮肤页内炫彩精确显示，不作为臻彩详情页 canonical。
+
+### 27.2 数据与唯一性
+
+- 臻彩身份的唯一事实源为 `GET /rest/lol/prestige-chromas`，禁止通过名称包含“臻彩”等文本规则推断。
+- 前端至少使用 `heroId`、`heroName`、`skinId`、`itemName`、`instanceId`、`rank`、`startTime`、`startDate`、`cid`、`cname`、`timgUrl`、`skinLines` 和 `universes` 字段。
+- 接口成功但找不到对应 `skinId` 时返回 404；同一 `skinId` 返回多条记录时视为数据契约错误，不随机选取、不静默去重。
+- 接口失败时明确暴露请求失败，不伪装成 404，也不回退为普通皮肤或普通炫彩页面。
+
+### 27.3 首屏与详情内容
+
+- 首屏复用全屏查看器，标题使用 `itemName`，主视觉使用 `https://game.gtimg.cn/images/lol/act/a20230715chromahub/skin/site3-{instanceId}.jpg`，分类标识使用 `cname` 与 `timgUrl`。
+- `/prestige-chromas` 列表 Tab 的卡片主图使用 `https://game.gtimg.cn/images/lol/act/a20230715chromahub/skin/site5-{instanceId}.jpg`；图片容器为正方形，并按顶部裁切显示。
+- `/prestige-chromas` 列表卡片不展示英雄、分类、上线时间等副信息，仅展示臻彩名称；卡片与图片容器不展示边框和圆角；`timgUrl` 作为 tag 图片，悬浮显示在图片中间底部。
+- `/prestige-chromas` 列表分组规则：「所有」输出一个不分组的单一列表区块；按英雄分组时使用 `heroId + heroName`；按宇宙分组时使用 `universes`，多宇宙可出现在多个分组，缺失归入「未归属宇宙」；按套装分组时使用 `skinLines`，多套装可出现在多个分组，缺失归入「未归属套装」；臻彩分类使用 `cid + cname` 作为筛选条件，缺失分类不进入分类筛选下拉。
+- `/prestige-chromas` 列表在选择英雄、宇宙、套装分组时，真实分组标题可点击跳转到对应英雄详情页、宇宙列表页或套装列表页；未知归属分组保持纯文本标题。
+- `/prestige-chromas` 列表排序规则：默认按接口 `rank` 降序；「上线时间」排序实际读写 `sort=rank`，支持 `order=asc|desc`；选择分组时提供 `sort=count` 数量排序，按分组内臻彩数量升序/降序排列分组，数量一致时按分组名称兜底排序。
+- `instanceId` 缺失时仍输出臻彩正文并明确显示图片不可用，不拼接无效图片 URL。
+- 详情抽屉展示臻彩名称与简介、英雄、臻彩 ID、分类、上线时间、所属皮肤系列和所属宇宙；缺失字段直接省略，不伪造默认说明。
+- `skinId` 是臻彩 ID，不用于匹配原皮详情实体；详情抽屉不生成基于该字段的原皮详情页入口。
+- 英雄、系列和宇宙仅在能与本站实体 ID 匹配时生成站内链接，否则展示纯文本名称。
+- 上一款、下一款臻彩按接口 `rank` 排序，跳转到相邻臻彩的独立详情页。
+
+### 27.4 SEO 与结构化数据
+
+- 每个臻彩页面生成独立 title、description、自引用 canonical、Open Graph 标题、描述和原画。
+- title 使用“`{itemName}臻彩原画与资料`”；description 由英雄、分类、系列、宇宙和上线时间等真实字段组合。
+- 页面输出臻彩专属 `ImageObject` 与 `BreadcrumbList`；面包屑至少包含首页、臻彩藏馆和当前臻彩。
+- sitemap 收录所有规范臻彩详情 URL，并使用臻彩上线时间作为可用的 `lastModified` 来源。
+- 臻彩详情页的服务端 HTML 必须包含臻彩名称和详情正文，不能只在客户端切换图片或 metadata。
+
+### 27.5 复用边界与验证
+
+- 对现有 `SkinDetailViewer` 仅做支撑臻彩内容所需的局部通用化；皮肤详情页现有查看、切换、下载、抽屉和移动端行为保持不变。
+- 验证覆盖路由 ID 与 slug 规范化、接口解包、唯一匹配、重复数据、404 与接口失败区分、metadata、canonical、Open Graph、JSON-LD、sitemap 和前后导航。
+- 执行 `npm run lint`、`npm run build`，并实际检查桌面端和移动端详情抽屉，以及服务端 HTML 中的标题、正文和 canonical。

@@ -272,7 +272,7 @@ export function HomeTabs({
                 />
               ) : (
                 <div className={styles.empty}>
-                  公开接口暂未返回臻彩原画数据。
+                  公开接口暂未返回臻彩皮肤数据。
                 </div>
               )}
             </CardContent>

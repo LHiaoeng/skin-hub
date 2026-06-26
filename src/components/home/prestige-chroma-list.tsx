@@ -80,7 +80,7 @@ export function PrestigeChromaList({
   return (
     <div className={styles.prestigeChromaList}>
       <div className={styles.prestigeChromaToolbar}>
-        <ButtonGroup aria-label="臻彩原画分组">
+        <ButtonGroup aria-label="臻彩皮肤分组">
           {groupControls.map((control) => {
             const Icon = control.icon;
             return (
@@ -113,7 +113,7 @@ export function PrestigeChromaList({
             );
           })}
         </ButtonGroup>
-        <ButtonGroup aria-label="臻彩原画排序">
+        <ButtonGroup aria-label="臻彩皮肤排序">
           {sortControlsForGroup.map((control) => {
             const Icon = control.icon;
             const active = options.sortBy === control.key;
@@ -155,7 +155,7 @@ export function PrestigeChromaList({
             options={options}
           />
         </ButtonGroup>
-        <span>共 {visibleCount} 款臻彩原画</span>
+        <span>共 {visibleCount} 款臻彩皮肤</span>
       </div>
 
       <div className={styles.prestigeChromaGroups}>
@@ -226,7 +226,7 @@ function PrestigeChromaCard({
         {imageUrl ? (
           <Image
             src={imageUrl}
-            alt={`${item.itemName} 臻彩原画`}
+            alt={`${item.itemName} 臻彩皮肤`}
             fill
             priority={priority}
             sizes="(max-width: 720px) 50vw, (max-width: 1024px) 33vw, 20vw"

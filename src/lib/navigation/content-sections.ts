@@ -27,7 +27,7 @@ export const contentSections: ContentSection[] = [
   { key: "skinlines", label: "皮肤套装", href: "/skinlines", icon: Globe },
   {
     key: "prestige-chromas",
-    label: "臻彩原画",
+    label: "臻彩皮肤",
     href: "/prestige-chromas",
     icon: Palette,
   },

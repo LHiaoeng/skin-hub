@@ -6,13 +6,13 @@ import { parsePrestigeChromaListOptions } from "@/lib/lol/prestige-chroma";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "臻彩原画 - Skin Hub",
+  title: "臻彩皮肤 - Skin Hub",
   description:
-    "浏览英雄联盟国服臻彩原画，查看臻彩英雄、分类、上线时间与独立详情页。",
+    "浏览英雄联盟国服臻彩皮肤，查看臻彩英雄、分类、上线时间与独立详情页。",
   openGraph: {
-    title: "臻彩原画 - Skin Hub",
+    title: "臻彩皮肤 - Skin Hub",
     description:
-      "浏览英雄联盟国服臻彩原画，查看臻彩英雄、分类、上线时间与独立详情页。",
+      "浏览英雄联盟国服臻彩皮肤，查看臻彩英雄、分类、上线时间与独立详情页。",
   },
 };
 

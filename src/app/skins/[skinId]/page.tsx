@@ -6,6 +6,7 @@ import {
   getChampion,
   getChampionSkins,
   getLolDictionaries,
+  getPrestigeChromas,
   getSkin,
   getSkinlines,
   getSkins,
@@ -19,9 +20,12 @@ import {
   getGlobalRarityIconUrl,
   getGlobalRarityName,
 } from "@/lib/lol/rarity";
+import { getPrestigeChromaImageUrl } from "@/lib/lol/prestige-chroma";
+import { parseSkinChromas } from "@/lib/lol/skin-chromas";
 import {
   championPath,
   parseRouteId,
+  prestigeChromaPath,
   skinlinePath,
   skinPath,
   universePath,
@@ -29,6 +33,7 @@ import {
 import { breadcrumbSchema, skinImageSchema } from "@/lib/seo/schema";
 import type {
   Champion,
+  PrestigeChroma,
   Skin,
   SkinChroma,
   SkinDictItem,
@@ -47,8 +52,6 @@ interface SkinDetailPageProps {
     skinId: string;
   }>;
 }
-
-type UnknownRecord = Record<string, unknown>;
 
 export const revalidate = 86400;
 
@@ -103,14 +106,21 @@ export default async function SkinDetailPage({ params }: SkinDetailPageProps) {
     notFound();
   }
 
-  const [champion, championSkins, dictionaries, allSkinlines, allUniverses] =
-    await Promise.all([
-      getChampion(skin.championId),
-      getChampionSkins(skin.championId, revalidate),
-      getLolDictionaries(revalidate),
-      getSkinlines(),
-      getUniverses(),
-    ]);
+  const [
+    champion,
+    championSkins,
+    dictionaries,
+    allSkinlines,
+    allUniverses,
+    prestigeChromas,
+  ] = await Promise.all([
+    getChampion(skin.championId),
+    getChampionSkins(skin.championId, revalidate),
+    getLolDictionaries(revalidate),
+    getSkinlines(),
+    getUniverses(),
+    getPrestigeChromas(),
+  ]);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const pageUrl = `${siteUrl}${skinPath(skin)}`;
@@ -127,6 +137,7 @@ export default async function SkinDetailPage({ params }: SkinDetailPageProps) {
     cnRarityItems: dictionaries.cnRarity,
     globalRarityItems: dictionaries.globalRarity,
     emblemItems: dictionaries.emblems,
+    prestigeChromas,
   });
 
   return (
@@ -153,6 +164,7 @@ function buildViewerProps({
   cnRarityItems,
   globalRarityItems,
   emblemItems,
+  prestigeChromas,
 }: {
   skin: Skin;
   champion?: Champion;
@@ -162,6 +174,7 @@ function buildViewerProps({
   cnRarityItems: SkinDictItem[];
   globalRarityItems: SkinDictItem[];
   emblemItems: SkinDictItem[];
+  prestigeChromas: PrestigeChroma[];
 }): SkinDetailViewerProps {
   const championName = getChampionDisplayName(champion, skin);
   const sortedChampionSkins = sortSkinsByRelease(championSkins);
@@ -284,7 +297,7 @@ function buildViewerProps({
     nextSkin: nextSkin
       ? { label: nextSkin.name, href: skinPath(nextSkin) }
       : undefined,
-    visuals: buildVisuals(skin, chromas),
+    visuals: buildVisuals(skin, chromas, prestigeChromas),
   };
 }
 
@@ -353,7 +366,14 @@ function splitIdSet(value?: string) {
   );
 }
 
-function buildVisuals(skin: Skin, chromas: SkinChroma[]): SkinVisual[] {
+function buildVisuals(
+  skin: Skin,
+  chromas: SkinChroma[],
+  prestigeChromas: PrestigeChroma[],
+): SkinVisual[] {
+  const prestigeByChromaId = new Map(
+    prestigeChromas.map((item) => [item.skinId, item]),
+  );
   const baseVisual: SkinVisual = {
     id: `skin-${skin.riotSkinId}`,
     name: skin.name,
@@ -379,134 +399,63 @@ function buildVisuals(skin: Skin, chromas: SkinChroma[]): SkinVisual[] {
     description: skin.description,
   };
 
-  const chromaVisuals = chromas.map((chroma) => ({
-    id: `chroma-${chroma.id}`,
-    name: chroma.name,
-    isChroma: true,
-    chromaImageUrl: normalizeImageUrl(chroma.chromaPath, skin.isPbeOnly),
-    imageUrl: normalizeImageUrl(
+  const chromaVisuals = chromas.map((chroma) => {
+    const prestigeChroma = prestigeByChromaId.get(chroma.id);
+    const prestigeImageUrl = prestigeChroma
+      ? getPrestigeChromaImageUrl(prestigeChroma)
+      : undefined;
+    const chromaImageUrl = normalizeImageUrl(
       chroma.uncenteredSplashPath ??
         chroma.splashPath ??
         chroma.chromaPath ??
         chroma.tilePath ??
         skin.uncenteredSplashPath,
       skin.isPbeOnly,
-    ),
-    focusImageUrl: normalizeImageUrl(
+    );
+    const chromaFocusImageUrl = normalizeImageUrl(
       chroma.splashPath ??
         chroma.uncenteredSplashPath ??
         chroma.chromaPath ??
         skin.splashPath,
       skin.isPbeOnly,
-    ),
-    videoUrl: normalizeImageUrl(
-      chroma.collectionSplashVideoPath,
-      skin.isPbeOnly,
-    ),
-    focusVideoUrl: normalizeImageUrl(
-      chroma.splashVideoPath ?? chroma.previewVideoUrl,
-      skin.isPbeOnly,
-    ),
-    thumbUrl: normalizeImageUrl(
-      chroma.chromaPath ??
-        chroma.loadScreenVintagePath ??
-        chroma.loadScreenPath ??
-        chroma.tilePath ??
-        chroma.splashPath ??
-        skin.loadScreenPath,
-      skin.isPbeOnly,
-    ),
-    colors: chroma.colors ?? [],
-    description: chroma.description,
-  }));
+    );
+
+    return {
+      id: `chroma-${chroma.id}`,
+      name: chroma.name,
+      isChroma: true,
+      chromaImageUrl: normalizeImageUrl(chroma.chromaPath, skin.isPbeOnly),
+      imageUrl: prestigeImageUrl ?? chromaImageUrl,
+      focusImageUrl: chromaFocusImageUrl,
+      videoUrl: normalizeImageUrl(
+        chroma.collectionSplashVideoPath,
+        skin.isPbeOnly,
+      ),
+      focusVideoUrl: normalizeImageUrl(
+        chroma.splashVideoPath ?? chroma.previewVideoUrl,
+        skin.isPbeOnly,
+      ),
+      thumbUrl: normalizeImageUrl(
+        chroma.chromaPath ??
+          chroma.loadScreenVintagePath ??
+          chroma.loadScreenPath ??
+          chroma.tilePath ??
+          chroma.splashPath ??
+          skin.loadScreenPath,
+        skin.isPbeOnly,
+      ),
+      colors: chroma.colors ?? [],
+      description: chroma.description,
+      prestigeChroma: prestigeChroma
+        ? {
+            label: prestigeChroma.itemName,
+            href: prestigeChromaPath(prestigeChroma),
+            categoryName: prestigeChroma.cname?.trim(),
+            tagIconUrl: normalizeImageUrl(prestigeChroma.timgUrl),
+          }
+        : undefined,
+    };
+  });
 
   return [baseVisual, ...chromaVisuals];
-}
-
-function parseSkinChromas(skin: Skin): SkinChroma[] {
-  const chromasById = new Map<number, SkinChroma>();
-  const raw = skin.chromasJson?.trim();
-
-  if (raw) {
-    try {
-      const parsed: unknown = JSON.parse(raw);
-      const items = Array.isArray(parsed)
-        ? parsed
-        : isRecord(parsed) && Array.isArray(parsed.chromas)
-          ? parsed.chromas
-          : [];
-      items
-        .map(normalizeChroma)
-        .filter((item): item is SkinChroma => item !== undefined)
-        .forEach((chroma) => chromasById.set(chroma.id, chroma));
-    } catch {
-      // The structured chroma list remains authoritative when the legacy JSON is invalid.
-    }
-  }
-
-  skin.chromas?.forEach((chroma) => chromasById.set(chroma.id, chroma));
-
-  return Array.from(chromasById.values());
-}
-
-function normalizeChroma(value: unknown): SkinChroma | undefined {
-  if (!isRecord(value)) {
-    return undefined;
-  }
-
-  const id = numberOf(value.id);
-  const name = stringOf(value.name);
-
-  if (id === undefined || !name) {
-    return undefined;
-  }
-
-  return {
-    id,
-    name,
-    contentId: stringOf(value.contentId),
-    chromaPath: stringOf(value.chromaPath),
-    tilePath: stringOf(value.tilePath),
-    splashPath: stringOf(value.splashPath),
-    uncenteredSplashPath: stringOf(value.uncenteredSplashPath),
-    loadScreenPath: stringOf(value.loadScreenPath),
-    loadScreenVintagePath: stringOf(value.loadScreenVintagePath),
-    splashVideoPath: stringOf(value.splashVideoPath),
-    previewVideoUrl: stringOf(value.previewVideoUrl),
-    collectionSplashVideoPath: stringOf(value.collectionSplashVideoPath),
-    colors: stringArrayOf(value.colors),
-    description: stringOf(value.description),
-  };
-}
-
-function isRecord(value: unknown): value is UnknownRecord {
-  return typeof value === "object" && value !== null;
-}
-
-function stringOf(value: unknown) {
-  return typeof value === "string" && value.trim() ? value.trim() : undefined;
-}
-
-function numberOf(value: unknown) {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value === "string" && value.trim()) {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : undefined;
-  }
-
-  return undefined;
-}
-
-function stringArrayOf(value: unknown) {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value.filter(
-    (item): item is string =>
-      typeof item === "string" && item.trim().length > 0,
-  );
 }

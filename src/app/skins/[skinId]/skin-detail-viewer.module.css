@@ -52,13 +52,15 @@
 }
 
 .media {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
 }
 
 .viewer[data-fit-mode="contain"] .media {
-  width: auto;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
   height: 100%;
@@ -67,18 +69,9 @@
   object-position: center center;
 }
 
-@media (max-aspect-ratio: 16 / 9) {
-  .viewer[data-fit-mode="contain"] .media {
-    width: 100%;
-    height: auto;
-  }
-}
-
 .viewer[data-fit-mode="cover"] .media {
-  width: 100%;
   min-width: 0;
   max-width: none;
-  height: 100%;
   object-fit: cover !important;
   object-position: center center;
 }
@@ -97,10 +90,9 @@
 
 .panelLink,
 .externalLink {
-  border: 1px solid rgb(255 255 255 / 0.18);
-  background: rgb(5 8 13 / 0.56);
-  box-shadow: 0 18px 44px rgb(0 0 0 / 0.28);
-  backdrop-filter: blur(18px);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  box-shadow: 0 18px 44px hsl(var(--foreground) / 0.08);
 }
 
 .cornerButton,
@@ -132,17 +124,42 @@
   white-space: nowrap;
 }
 
-.skinTitleButton {
-  max-width: min(34vw, 360px);
-  font-weight: 800;
-  cursor: pointer;
+.titleTagIconTrigger {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: inherit;
+  border: 0;
+  background: transparent;
+  cursor: help;
 }
 
-.skinTitleButton img {
+.titleTagIconTrigger:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+.titleTagIconPopoverContent {
+  z-index: 120;
+  width: auto;
+  max-width: calc(100vw - 24px);
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.titleTagIconPopoverContent img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
+}
+
+.skinTitleTagIcon {
   width: 18px;
   height: 18px;
-  flex: 0 0 auto;
-  object-fit: contain;
 }
 
 .mobileSkinTitle {
@@ -183,8 +200,8 @@
 .panelLink:hover,
 .externalLink:hover {
   transform: translateY(-1px);
-  border-color: rgb(255 255 255 / 0.38);
-  background: rgb(18 25 36 / 0.72);
+  border-color: hsl(var(--primary) / 0.42);
+  background: hsl(var(--accent));
 }
 
 .titleBlock {
@@ -436,6 +453,48 @@
   object-fit: contain;
 }
 
+.chromaPrestigeTag {
+  position: absolute;
+  bottom: 44px;
+  left: 50%;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #f8fbff;
+  background: transparent;
+  transform: translateX(-50%);
+}
+
+.chromaPrestigeTag img,
+.chromaPrestigeTag svg {
+  display: block;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.chromaPrestigeTagPopoverContent {
+  z-index: 120;
+  width: auto;
+  max-width: min(240px, 80vw);
+  padding: 8px 10px;
+  color: #f8fbff;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 10px;
+  background: rgb(5 8 13 / 0.9);
+  box-shadow: 0 18px 44px rgb(0 0 0 / 0.36);
+  backdrop-filter: blur(18px);
+}
+
+.chromaPrestigeTagPopoverContent span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
 .chromaName {
   display: block;
   max-width: 270px;
@@ -536,6 +595,7 @@
     18px;
   overflow-x: hidden;
   overflow-y: auto;
+  color: hsl(var(--foreground));
 }
 
 .panel > * {
@@ -563,6 +623,11 @@
   height: 24px;
   flex: 0 0 auto;
   object-fit: contain;
+}
+
+.panelTitleTagIcon {
+  width: 24px;
+  height: 24px;
 }
 
 .panelTitle h2 {
@@ -594,7 +659,7 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  color: rgb(248 251 255 / 0.68);
+  color: hsl(var(--muted-foreground));
   border: 0;
   border-radius: 4px;
   background: transparent;
@@ -603,8 +668,8 @@
 
 .panelTitle button:hover,
 .panelTitle button[aria-label="复制成功"] {
-  color: #f8fbff;
-  background: rgb(255 255 255 / 0.12);
+  color: hsl(var(--foreground));
+  background: hsl(var(--accent));
 }
 
 .panelTitle svg {
@@ -641,14 +706,14 @@
 }
 
 .panelSection h3 {
-  color: rgb(248 251 255 / 0.62);
+  color: hsl(var(--muted-foreground));
   font-size: 0.78rem;
   text-transform: uppercase;
 }
 
 .panelSection p {
   margin: 0;
-  color: rgb(248 251 255 / 0.82);
+  color: hsl(var(--foreground));
   line-height: 1.72;
 }
 
@@ -667,7 +732,7 @@
   min-height: 44px;
   padding: 10px 12px;
   border-radius: 12px;
-  color: #f8fbff;
+  color: hsl(var(--foreground));
   transition:
     transform 160ms ease,
     background 160ms ease,
@@ -685,15 +750,19 @@
   justify-content: space-between;
   gap: 16px;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgb(255 255 255 / 0.12);
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 .definitionList dt {
-  color: rgb(248 251 255 / 0.6);
+  color: hsl(var(--muted-foreground));
 }
 
 .definitionList dd {
+  display: inline-flex;
   min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
   margin: 0;
   text-align: right;
   overflow-wrap: anywhere;
@@ -712,7 +781,7 @@
 .detailCollapsible {
   min-width: 0;
   overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 0.14);
+  border: 1px solid hsl(var(--border));
   border-radius: 12px;
 }
 
@@ -755,7 +824,7 @@
   display: block;
   min-width: 0;
   overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 0.14);
+  border: 1px solid hsl(var(--border));
   border-radius: 10px;
   cursor: default;
 }
@@ -772,7 +841,7 @@
 }
 
 .drawerChromaImageMissing {
-  background: rgb(255 255 255 / 0.06);
+  background: hsl(var(--muted));
 }
 
 .drawerChromaHoverCard {
@@ -795,7 +864,7 @@
 
 .emptyChromaText {
   margin: 0;
-  color: rgb(248 251 255 / 0.6);
+  color: hsl(var(--muted-foreground));
 }
 
 .detailIcons {
@@ -813,6 +882,28 @@
   object-fit: contain;
 }
 
+.detailValuePreviewTrigger {
+  padding: 0;
+  color: inherit;
+  border: 0;
+  background: transparent;
+  cursor: help;
+}
+
+.detailValueLink {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.detailValuePreviewTrigger:hover,
+.detailValuePreviewTrigger:focus-visible {
+  color: hsl(var(--primary));
+  outline: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .detailIconTrigger {
   display: inline-flex;
   align-items: center;
@@ -827,7 +918,7 @@
 }
 
 .detailIconTrigger:hover {
-  background: rgb(255 255 255 / 0.1);
+  background: hsl(var(--accent));
 }
 
 .detailIconPopoverContent {
@@ -835,11 +926,7 @@
   width: auto;
   max-width: min(320px, 72vw);
   padding: 8px;
-  border: 1px solid rgb(255 255 255 / 0.18);
   border-radius: 10px;
-  background: rgb(5 8 13 / 0.88);
-  box-shadow: 0 18px 44px rgb(0 0 0 / 0.36);
-  backdrop-filter: blur(18px);
 }
 
 .detailIconPopoverContent img {

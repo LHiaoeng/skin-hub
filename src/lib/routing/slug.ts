@@ -76,11 +76,11 @@ export function buildPrestigeChromaSeo(
   imageUrl: string | undefined,
 ) {
   return {
-    title: `${item.itemName}臻彩原画与资料`,
+    title: `${item.itemName}臻彩皮肤与资料`,
     description,
     canonicalPath: prestigeChromaPath(item),
     imageUrl,
-    imageAlt: `${item.itemName}臻彩原画`,
+    imageAlt: `${item.itemName}臻彩皮肤`,
   };
 }
 

@@ -9,6 +9,7 @@ import {
 import { JsonLd } from "@/components/seo/json-ld";
 import {
   getChampion,
+  getChampionSkins,
   getPrestigeChromas,
   getSkinlines,
   getUniverses,
@@ -19,16 +20,23 @@ import {
   getPrestigeChromaImageUrl,
   getPrestigeChromaNavigation,
 } from "@/lib/lol/prestige-chroma";
+import { parseSkinChromas } from "@/lib/lol/skin-chromas";
 import {
   buildPrestigeChromaSeo,
   championPath,
   prestigeChromaPath,
   resolvePrestigeChromaRoute,
   skinlinePath,
+  skinPath,
   universePath,
 } from "@/lib/routing/slug";
 import { breadcrumbSchema, imageObjectSchema } from "@/lib/seo/schema";
-import type { PrestigeChroma, SkinlineSummary, Universe } from "@/types/lol";
+import type {
+  PrestigeChroma,
+  Skin,
+  SkinlineSummary,
+  Universe,
+} from "@/types/lol";
 
 interface PrestigeChromaDetailPageProps {
   params: Promise<{
@@ -111,11 +119,14 @@ export default async function PrestigeChromaDetailPage({
   }
 
   const item = resolution.item;
-  const [champion, allSkinlines, allUniverses] = await Promise.all([
-    getChampion(item.heroId),
-    getSkinlines(),
-    getUniverses(),
-  ]);
+  const [champion, championSkins, allSkinlines, allUniverses] =
+    await Promise.all([
+      getChampion(item.heroId),
+      getChampionSkins(item.heroId, revalidate),
+      getSkinlines(),
+      getUniverses(),
+    ]);
+  const relatedSkin = findSkinByChromaId(championSkins, item.skinId);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const pageUrl = `${siteUrl}${resolution.canonicalPath}`;
   const description = buildPrestigeChromaDescription(item);
@@ -126,7 +137,7 @@ export default async function PrestigeChromaDetailPage({
     <>
       <JsonLd
         data={imageObjectSchema({
-          name: `${item.itemName}臻彩原画`,
+          name: `${item.itemName}臻彩皮肤`,
           imageUrl: seo.imageUrl,
           pageUrl,
           description: seo.description,
@@ -135,7 +146,7 @@ export default async function PrestigeChromaDetailPage({
       <JsonLd
         data={breadcrumbSchema([
           { name: "首页", url: siteUrl },
-          { name: "臻彩藏馆", url: `${siteUrl}/prestige-chromas` },
+          { name: "臻彩皮肤", url: `${siteUrl}/prestige-chromas` },
           { name: item.itemName, url: pageUrl },
         ])}
       />
@@ -144,6 +155,7 @@ export default async function PrestigeChromaDetailPage({
           item,
           items,
           champion,
+          relatedSkin,
           allSkinlines,
           allUniverses,
           description: seo.description,
@@ -158,6 +170,7 @@ function buildViewerProps({
   item,
   items,
   champion,
+  relatedSkin,
   allSkinlines,
   allUniverses,
   description,
@@ -166,6 +179,7 @@ function buildViewerProps({
   item: PrestigeChroma;
   items: PrestigeChroma[];
   champion: Awaited<ReturnType<typeof getChampion>>;
+  relatedSkin?: Skin;
   allSkinlines: SkinlineSummary[];
   allUniverses: Universe[];
   description: string;
@@ -173,8 +187,12 @@ function buildViewerProps({
 }): SkinDetailViewerProps {
   const { previousItem, nextItem } = getPrestigeChromaNavigation(items, item);
   const releaseTime = item.startDate?.trim() || item.startTime?.trim();
-  const skinlineNames = relationNames(item.skinLines);
-  const universeNames = relationNames(item.universes);
+  const categoryName = item.cname?.trim();
+  const categoryId = item.cid?.trim();
+  const categoryIconUrl = normalizeImageUrl(item.timgUrl);
+  const categoryHref = categoryId
+    ? prestigeChromaCategoryHref(categoryId)
+    : undefined;
   const resolvedSkinlines = item.skinLines.flatMap((relation) => {
     const skinline = allSkinlines.find(
       (candidate) => candidate.riotSkinlineId === relation.id,
@@ -196,12 +214,16 @@ function buildViewerProps({
     contentKind: "prestige-chroma",
     skinName: item.itemName,
     description,
+    showPanelDescription: false,
     seoSummary: description,
     championName: champion?.name ?? item.heroName,
     championHref: champion ? championPath(champion) : undefined,
+    topLinkLabel: "臻彩皮肤",
+    topLinkHref: "/prestige-chromas",
+    topLinkAriaLabel: "返回臻彩皮肤列表",
     rarityName: "",
     globalRarityName: "",
-    rarityIconUrl: normalizeImageUrl(item.timgUrl),
+    rarityIconUrl: categoryIconUrl,
     tags: [
       item.cname?.trim(),
       item.cid?.trim(),
@@ -211,22 +233,27 @@ function buildViewerProps({
     primaryDetailsTitle: "臻彩资料",
     cnDetails: [
       { label: "炫彩 ID", value: String(item.skinId) },
-      { label: "英雄", value: item.heroName },
-      ...(item.cname?.trim()
-        ? [{ label: "分类", value: item.cname.trim() }]
+      ...(categoryName
+        ? [
+            {
+              label: "臻彩分类",
+              value: categoryName,
+              valueHref: categoryHref,
+              valuePreviewIconUrl: categoryIconUrl,
+            },
+          ]
         : []),
-      ...(item.cid?.trim()
-        ? [{ label: "分类 ID", value: item.cid.trim() }]
-        : []),
-      ...(releaseTime ? [{ label: "上线时间", value: releaseTime }] : []),
-      ...(item.endTime?.trim()
-        ? [{ label: "结束时间", value: item.endTime.trim() }]
-        : []),
-      ...(skinlineNames ? [{ label: "系列", value: skinlineNames }] : []),
-      ...(universeNames ? [{ label: "宇宙", value: universeNames }] : []),
     ],
     globalDetails: [],
-    relatedLinks: [],
+    relatedLinks: relatedSkin
+      ? [
+          {
+            label: relatedSkin.name,
+            href: skinPath(relatedSkin),
+            meta: "所属皮肤",
+          },
+        ]
+      : [],
     skinlines: resolvedSkinlines,
     universes: resolvedUniverses,
     externalLinks: [],
@@ -238,6 +265,26 @@ function buildViewerProps({
       : undefined,
     visuals: [buildVisual(item, imageUrl, description)],
   };
+}
+
+function findSkinByChromaId(
+  skins: readonly Skin[],
+  chromaId: number,
+): Skin | undefined {
+  return skins.find((skin) =>
+    parseSkinChromas(skin).some((chroma) => chroma.id === chromaId),
+  );
+}
+
+function prestigeChromaCategoryHref(categoryId: string) {
+  const searchParams = new URLSearchParams({
+    group: "all",
+    sort: "rank",
+    order: "desc",
+    category: categoryId,
+  });
+
+  return `/prestige-chromas?${searchParams.toString()}`;
 }
 
 function buildVisual(
@@ -254,11 +301,4 @@ function buildVisual(
     colors: [],
     description,
   };
-}
-
-function relationNames(
-  relations: PrestigeChroma["skinLines"],
-): string | undefined {
-  const names = relations.map(({ name }) => name.trim()).filter(Boolean);
-  return names.length > 0 ? names.join("、") : undefined;
 }

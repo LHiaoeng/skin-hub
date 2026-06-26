@@ -58,6 +58,7 @@ import {
 import { getContentSection } from "@/lib/navigation/content-sections";
 
 const ChampionIcon = getContentSection("champions").icon;
+const PrestigeChromaIcon = getContentSection("prestige-chromas").icon;
 const UniverseIcon = getContentSection("universes").icon;
 const SkinlineIcon = getContentSection("skinlines").icon;
 
@@ -73,6 +74,10 @@ export interface SkinVisual {
   chromaImageUrl?: string;
   colors: string[];
   description?: string;
+  prestigeChroma?: SkinPanelLink & {
+    categoryName?: string;
+    tagIconUrl?: string;
+  };
 }
 
 export interface SkinPanelLink {
@@ -95,6 +100,8 @@ export interface SkinDetailIcon {
 export interface SkinDetailItem {
   label: string;
   value?: string;
+  valueHref?: string;
+  valuePreviewIconUrl?: string;
   icons?: SkinDetailIcon[];
 }
 
@@ -102,8 +109,12 @@ export interface SkinDetailViewerProps {
   contentKind?: "skin" | "prestige-chroma";
   skinName: string;
   description: string;
+  showPanelDescription?: boolean;
   championName: string;
   championHref?: string;
+  topLinkLabel?: string;
+  topLinkHref?: string;
+  topLinkAriaLabel?: string;
   rarityName: string;
   globalRarityName: string;
   rarityIconUrl?: string;
@@ -128,8 +139,12 @@ export function SkinDetailViewer({
   contentKind = "skin",
   skinName,
   description,
+  showPanelDescription = true,
   championName,
   championHref,
+  topLinkLabel,
+  topLinkHref,
+  topLinkAriaLabel,
   rarityName,
   globalRarityName,
   rarityIconUrl,
@@ -179,6 +194,12 @@ export function SkinDetailViewer({
     mediaMode === "video" ? getVisualVideoUrl(baseVisual, viewMode) : undefined;
   const chromaVisuals = visuals.filter((visual) => visual.isChroma);
   const contentLabel = contentKind === "prestige-chroma" ? "臻彩" : "皮肤";
+  const resolvedTopLinkLabel = topLinkLabel ?? championName;
+  const resolvedTopLinkHref = topLinkHref ?? championHref;
+  const resolvedTopLinkAriaLabel =
+    topLinkAriaLabel ?? `查看${resolvedTopLinkLabel}详情页`;
+  const TopLinkIcon =
+    topLinkHref === "/prestige-chromas" ? PrestigeChromaIcon : ChampionIcon;
   const resolvedSeoSummary =
     seoSummary ?? `${championName}，${rarityName}，${globalRarityName}`;
 
@@ -257,9 +278,18 @@ export function SkinDetailViewer({
 
   function handleSelectVisual(visualId: string) {
     const nextVisual = visuals.find((visual) => visual.id === visualId);
+    const nextViewMode = nextVisual?.prestigeChroma ? "original" : viewMode;
 
     setSelectedVisualId(visualId);
-    setMediaMode(getVisualVideoUrl(nextVisual, viewMode) ? "video" : "image");
+    if (nextViewMode !== viewMode) {
+      setViewMode(nextViewMode);
+    }
+    setMediaMode(
+      nextVisual?.prestigeChroma ||
+        !getVisualVideoUrl(nextVisual, nextViewMode)
+        ? "image"
+        : "video",
+    );
   }
 
   function handleStageTouchStart(event: React.TouchEvent<HTMLElement>) {
@@ -440,7 +470,7 @@ export function SkinDetailViewer({
             >
               <ArrowLeft aria-hidden />
             </Button>
-            {championHref ? (
+            {resolvedTopLinkHref ? (
               <Button
                 className={`${styles.cornerButton} ${styles.actionButton}`}
                 variant="ghost"
@@ -448,11 +478,11 @@ export function SkinDetailViewer({
                 asChild
               >
                 <Link
-                  href={championHref}
-                  aria-label={`查看${championName}详情页`}
+                  href={resolvedTopLinkHref}
+                  aria-label={resolvedTopLinkAriaLabel}
                 >
-                  <ChampionIcon data-icon="inline-start" aria-hidden />
-                  <span>{championName}</span>
+                  <TopLinkIcon data-icon="inline-start" aria-hidden />
+                  <span>{resolvedTopLinkLabel}</span>
                 </Link>
               </Button>
             ) : (
@@ -462,9 +492,9 @@ export function SkinDetailViewer({
                 size="sm"
                 asChild
               >
-                <span aria-label={championName}>
-                  <ChampionIcon data-icon="inline-start" aria-hidden />
-                  <span>{championName}</span>
+                <span aria-label={resolvedTopLinkLabel}>
+                  <TopLinkIcon data-icon="inline-start" aria-hidden />
+                  <span>{resolvedTopLinkLabel}</span>
                 </span>
               </Button>
             )}
@@ -529,24 +559,29 @@ export function SkinDetailViewer({
             >
               <Download data-icon="inline-start" aria-hidden />
             </Button>
-            <DrawerTrigger asChild>
-              <Button
-                className={`${styles.cornerButton} ${styles.actionButton} ${styles.skinTitleButton}`}
+            <Button
+              className={`${styles.cornerButton} ${styles.actionButton} ${styles.skinTitleButton}`}
+              variant="ghost"
+              size="sm"
+              asChild
+            >
+              <DrawerTrigger
                 type="button"
-                variant="ghost"
-                size="sm"
                 onMouseEnter={() => setIsPanelOpen(true)}
                 title="查看详情"
                 aria-label="查看详情"
               >
                 {rarityIconUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- Rarity gems are small dictionary assets.
-                  <img src={rarityIconUrl} alt="" />
+                  <TitleTagIcon
+                    className={styles.skinTitleTagIcon}
+                    iconUrl={rarityIconUrl}
+                    label={rarityName}
+                  />
                 ) : null}
                 <span>{selectedVisual?.name ?? skinName}</span>
                 <Info data-icon="inline-start" aria-hidden />
-              </Button>
-            </DrawerTrigger>
+              </DrawerTrigger>
+            </Button>
           </ButtonGroup>
         </div>
 
@@ -582,8 +617,11 @@ export function SkinDetailViewer({
             aria-label={`查看${selectedVisual?.name ?? skinName}详情`}
           >
             {rarityIconUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element -- Rarity gems are small dictionary assets.
-              <img src={rarityIconUrl} alt="" />
+              <TitleTagIcon
+                className={styles.skinTitleTagIcon}
+                iconUrl={rarityIconUrl}
+                label={rarityName}
+              />
             ) : null}
             <span>{selectedVisual?.name ?? skinName}</span>
             <Info data-icon="inline-end" aria-hidden />
@@ -594,8 +632,11 @@ export function SkinDetailViewer({
           <DrawerHeader className={styles.panelHeader}>
             <div className={styles.panelTitle}>
               {rarityIconUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element -- Rarity gems are small dictionary assets.
-                <img src={rarityIconUrl} alt={rarityName} title={rarityName} />
+                <TitleTagIcon
+                  className={styles.panelTitleTagIcon}
+                  iconUrl={rarityIconUrl}
+                  label={rarityName}
+                />
               ) : null}
               <DrawerTitle asChild>
                 <h2>
@@ -608,12 +649,14 @@ export function SkinDetailViewer({
             </div>
           </DrawerHeader>
 
-          <DrawerDescription asChild>
-            <div className={styles.panelDescription}>
-              <span>{description}</span>
-              <CopyButton value={description} />
-            </div>
-          </DrawerDescription>
+          {showPanelDescription ? (
+            <DrawerDescription asChild>
+              <div className={styles.panelDescription}>
+                <span>{description}</span>
+                <CopyButton value={description} />
+              </div>
+            </DrawerDescription>
+          ) : null}
 
           <section className={styles.panelSection}>
             <h3>关联内容</h3>
@@ -628,6 +671,15 @@ export function SkinDetailViewer({
                   <span>{link.label}</span>
                 </Link>
               ))}
+              {selectedVisual?.prestigeChroma ? (
+                <Link
+                  className={styles.panelLink}
+                  href={selectedVisual.prestigeChroma.href}
+                >
+                  <PrestigeChromaIcon aria-hidden />
+                  <span>{selectedVisual.prestigeChroma.label}</span>
+                </Link>
+              ) : null}
               {championHref ? (
                 <Link className={styles.panelLink} href={championHref}>
                   <ChampionIcon aria-hidden />
@@ -674,7 +726,9 @@ export function SkinDetailViewer({
             ) : null}
           </section>
 
-          <ChromaCollapsible visuals={chromaVisuals} />
+          {contentKind === "skin" ? (
+            <ChromaCollapsible visuals={chromaVisuals} />
+          ) : null}
 
           {externalLinks.length ? (
             <section className={styles.panelSection}>
@@ -1056,6 +1110,12 @@ function ChromaThumb({
         // eslint-disable-next-line @next/next/no-img-element -- Chroma thumbs switch client-side.
         <img src={visual.thumbUrl} alt="" />
       ) : null}
+      {visual.prestigeChroma ? (
+        <ChromaPrestigeTag
+          chromaName={visual.name}
+          prestigeChroma={visual.prestigeChroma}
+        />
+      ) : null}
       <ChromaColorSwatch
         className={styles.chromaColors}
         colors={colors ?? []}
@@ -1066,6 +1126,78 @@ function ChromaThumb({
         size={22}
       />
     </span>
+  );
+}
+
+function ChromaPrestigeTag({
+  chromaName,
+  prestigeChroma,
+}: {
+  chromaName: string;
+  prestigeChroma: NonNullable<SkinVisual["prestigeChroma"]>;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const closeTimerRef = useRef<number | undefined>(undefined);
+  const label = prestigeChroma.categoryName ?? prestigeChroma.label;
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        window.clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
+
+  function openPopover() {
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+    }
+
+    setIsOpen(true);
+  }
+
+  function scheduleClose() {
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+    }
+
+    closeTimerRef.current = window.setTimeout(() => setIsOpen(false), 120);
+  }
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Link
+          className={styles.chromaPrestigeTag}
+          href={prestigeChroma.href}
+          onClick={(event) => event.stopPropagation()}
+          onFocus={openPopover}
+          onBlur={scheduleClose}
+          onMouseEnter={openPopover}
+          onMouseLeave={scheduleClose}
+          aria-label={`查看${chromaName}对应的${label}臻彩详情`}
+        >
+          {prestigeChroma.tagIconUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- Prestige chroma tag comes from the chroma API.
+            <img src={prestigeChroma.tagIconUrl} alt="" />
+          ) : (
+            <Palette aria-hidden />
+          )}
+        </Link>
+      </PopoverTrigger>
+      <PopoverContent
+        className={styles.chromaPrestigeTagPopoverContent}
+        side="top"
+        align="center"
+        onClick={(event) => event.stopPropagation()}
+        onCloseAutoFocus={(event) => event.preventDefault()}
+        onMouseEnter={openPopover}
+        onMouseLeave={scheduleClose}
+        onOpenAutoFocus={(event) => event.preventDefault()}
+      >
+        <span>{label}</span>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -1104,7 +1236,18 @@ function DetailList({ items }: { items: SkinDetailItem[] }) {
         <div key={item.label}>
           <dt>{item.label}</dt>
           <dd>
-            {item.icons ? (
+            {item.value ? (
+              item.valuePreviewIconUrl ? (
+                <DetailValuePreview
+                  href={item.valueHref}
+                  iconUrl={item.valuePreviewIconUrl}
+                  label={item.value}
+                />
+              ) : (
+                <DetailValue href={item.valueHref} label={item.value} />
+              )
+            ) : null}
+            {item.icons?.length ? (
               <span className={styles.detailIcons}>
                 {item.icons.map((icon) =>
                   icon.iconUrl ? (
@@ -1115,13 +1258,162 @@ function DetailList({ items }: { items: SkinDetailItem[] }) {
                   ) : null,
                 )}
               </span>
-            ) : (
-              (item.value ?? "")
-            )}
+            ) : null}
           </dd>
         </div>
       ))}
     </dl>
+  );
+}
+
+function DetailValue({ href, label }: { href?: string; label: string }) {
+  if (!href) {
+    return <span>{label}</span>;
+  }
+
+  return (
+    <Link className={styles.detailValueLink} href={href}>
+      {label}
+    </Link>
+  );
+}
+
+function TitleTagIcon({
+  className,
+  iconUrl,
+  label,
+}: {
+  className: string;
+  iconUrl: string;
+  label: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const closeTimerRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        window.clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
+
+  function openPopover() {
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+    }
+    setIsOpen(true);
+  }
+
+  function scheduleClose() {
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+    }
+    closeTimerRef.current = window.setTimeout(() => setIsOpen(false), 120);
+  }
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <span
+          className={`${styles.titleTagIconTrigger} ${className}`}
+          aria-label={`查看${label}标签图标`}
+          role="button"
+          tabIndex={0}
+          title={label}
+          onClick={(event) => event.preventDefault()}
+          onFocus={openPopover}
+          onBlur={scheduleClose}
+          onMouseEnter={openPopover}
+          onMouseLeave={scheduleClose}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- Rarity/tag icons are dictionary assets. */}
+          <img src={iconUrl} alt="" />
+        </span>
+      </PopoverTrigger>
+      <PopoverContent
+        className={styles.titleTagIconPopoverContent}
+        side="top"
+        align="end"
+        onCloseAutoFocus={(event) => event.preventDefault()}
+        onMouseEnter={openPopover}
+        onMouseLeave={scheduleClose}
+        onOpenAutoFocus={(event) => event.preventDefault()}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- Title tag preview should use the source asset dimensions. */}
+        <img src={iconUrl} alt="" />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function DetailValuePreview({
+  href,
+  iconUrl,
+  label,
+}: {
+  href?: string;
+  iconUrl: string;
+  label: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const closeTimerRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        window.clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
+
+  function openPopover() {
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+    }
+    setIsOpen(true);
+  }
+
+  function scheduleClose() {
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current);
+    }
+    closeTimerRef.current = window.setTimeout(() => setIsOpen(false), 120);
+  }
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Link
+          className={`${styles.detailValuePreviewTrigger} ${href ? styles.detailValueLink : ""}`}
+          href={href ?? "#"}
+          aria-label={`查看${label}标签图标`}
+          onClick={(event) => {
+            if (!href) {
+              event.preventDefault();
+            }
+          }}
+          onFocus={openPopover}
+          onBlur={scheduleClose}
+          onMouseEnter={openPopover}
+          onMouseLeave={scheduleClose}
+        >
+          {label}
+        </Link>
+      </PopoverTrigger>
+      <PopoverContent
+        className={styles.detailIconPopoverContent}
+        side="top"
+        align="end"
+        onCloseAutoFocus={(event) => event.preventDefault()}
+        onMouseEnter={openPopover}
+        onMouseLeave={scheduleClose}
+        onOpenAutoFocus={(event) => event.preventDefault()}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- Prestige chroma tag preview should use the source asset dimensions. */}
+        <img src={iconUrl} alt="" />
+      </PopoverContent>
+    </Popover>
   );
 }
 
